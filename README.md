@@ -1,189 +1,178 @@
-# 🛡️ PhishShield  
-**Smart URL and File Threat Detection for Web Applications**
 
----
+# 🛡️ PhishShield: Smart URL and File Threat Detection
 
 ## 📌 Overview
 
-PhishShield is a **Python-powered web security tool** that detects **phishing links** and **malware-infected files** in real-time.  
-It acts as a **security layer** for web platforms where users upload files or share URLs.  
-The system integrates with **threat intelligence APIs** and local scanning tools to block dangerous content before it causes harm.
+PhishShield is a **Python-powered web security tool** designed to detect and block malicious content in real time. It acts as a security layer for web applications, scanning suspicious URLs and files to prevent phishing and malware attacks.
 
-This project is built for **practical use in national companies** and educational purposes, focusing on **real-world security threats**.
+This project is built for practical use, focusing on real-world security threats in corporate and educational environments. It integrates with industry-standard threat intelligence APIs and local scanning tools to offer robust, proactive protection.
 
----
+-----
 
-## 🚨 Problem Statement
+## 🚨 The Problem
 
-Phishing remains one of the most common and damaging forms of cyberattacks, tricking users into revealing sensitive information such as passwords, banking details, or personal data. While phishing attempts often occur through email, messaging platforms have become a major hotspot for these attacks.
+Phishing remains one of the most prevalent and damaging cyberattacks, tricking users into revealing sensitive information. While many attacks occur via email, platforms like **Telegram** have become major hotspots for distributing malicious links and files.
 
-One of the most vulnerable platforms in this regard is **Telegram**, where cybercriminals exploit public groups, channels, and private messages to share malicious links, fake login pages, and malware-infected files. Due to Telegram’s popularity, ease of file sharing, and lack of strict link scanning, it has become a significant distribution point for phishing campaigns.
+Cybercriminals exploit Telegram's popularity and file-sharing ease, often targeting users who lack the technical knowledge to identify these threats. This creates a significant gap in digital security, especially in regions where awareness and tools are limited.
 
-Currently, many users—especially in developing nations—lack the technical awareness or tools to detect these threats before falling victim. This gap calls for a lightweight, accessible, and real-time phishing detection tool.
+**PhishShield** addresses this by:
 
-**PhishShield** aims to address this by:  
-- Scanning suspicious URLs for phishing patterns and known malicious domains.  
-- Analyzing shared files for hidden malware signatures.  
-- Offering an easy-to-use interface for quick checks before users interact with potentially harmful content.  
-- Providing optional integration with Telegram bots to automatically detect and flag phishing attempts in chats or channels.
+  * Scanning suspicious URLs for phishing patterns and known malicious domains.
+  * Analyzing shared files for malware signatures.
+  * Providing an intuitive interface for quick checks.
+  * Offering optional integration with platforms like Telegram to automatically flag threats in chats and channels.
 
-By empowering users to identify threats before engaging, **PhishShield** will reduce the impact of phishing attacks and protect sensitive data in everyday communication.
+By empowering users to identify threats before they interact with them, PhishShield significantly reduces the impact of phishing and malware attacks.
 
----
+-----
 
 ## 🎯 Features
 
-- 🔗 **URL Threat Detection** – Scans URLs for phishing, malware, or blacklisted domains  
-- 📎 **File Malware Scanning** – Checks PDFs, DOCX, ZIP, and other files for malicious content  
-- 📊 **Admin Dashboard** – Displays threat logs with timestamps, sources, and reasons  
-- 🔔 **Alert System** – Notifies admins of blocked threats  
-- 🧪 **Testing Support** – Works with DVWA, Kali Linux, and EICAR test files for simulation  
+  * **URL Threat Detection:** Scans URLs against threat intelligence databases for phishing, malware, and blacklisted domains.
+  * **File Malware Scanning:** Analyzes uploaded files (PDFs, DOCX, ZIP, etc.) for malicious content using a local scanner.
+  * **Admin Dashboard:** Provides a centralized view of all security logs, including threat type, timestamp, and source.
+  * **Real-time Alerts:** Notifies administrators of blocked threats.
+  * **Testing Support:** Compatible with tools like DVWA, Kali Linux, and EICAR test files for comprehensive security testing and simulation.
 
----
+-----
 
 ## 🛠️ Tech Stack
 
-**Backend:**  
-- Python  
-- Flask  
+**Backend:** Python, Flask
 
-**Threat Detection:**  
-- VirusTotal API (for URLs)  
-- ClamAV (for file scanning)  
+**Threat Detection:**
 
-**Frontend:**  
-- HTML  
-- CSS  
-- Chart.js (for dashboard charts)  
+  * VirusTotal API (for URLs)
+  * ClamAV (for file scanning)
 
-**Database:**  
-- SQLite (for logs)  
+**Frontend:** HTML, CSS, Chart.js
 
-**Testing Tools:**  
-- Kali Linux  
-- DVWA (Damn Vulnerable Web App)  
-- EICAR test file  
+**Database:** SQLite (for threat logs)
 
----
+**Testing Tools:** Kali Linux, DVWA, EICAR test file
+
+-----
 
 ## 🧩 System Architecture
 
-1. **User Uploads File or URL** via web form  
-2. **Request Interception** in Flask backend  
-3. **Scanning Stage**:  
-   - URLs → VirusTotal API  
-   - Files → ClamAV local scan  
-4. **Decision**:  
-   - If clean → Allow  
-   - If malicious → Block & log incident  
-5. **Dashboard Logging** – Incident stored in SQLite and shown in dashboard  
+1.  **User Interaction:** A user uploads a file or submits a URL via the web interface.
+2.  **Request Handling:** The Flask backend intercepts the request.
+3.  **Threat Scanning:**
+      * URLs are sent to the VirusTotal API for analysis.
+      * Files are scanned locally using ClamAV.
+4.  **Decision & Action:**
+      * If the content is clean, it is allowed to proceed.
+      * If malicious, the content is blocked, and the incident is logged.
+5.  **Dashboard Logging:** The incident details are stored in the SQLite database and displayed on the admin dashboard.
 
----
+-----
 
 ## 📁 Project Structure
 
+```
 phishshield/
-├── app.py                 # Main Flask application
-├── scanners/              # Threat scanning modules
-│   ├── url_scanner.py     # URL scanning logic (VirusTotal API)
-│   ├── file_scanner.py    # File scanning logic (ClamAV)
-├── templates/             # HTML templates for the web UI
-│   ├── dashboard.html     # Admin dashboard page
-│   ├── upload.html        # File/URL upload page
-├── static/                # Static files (CSS, JS, Images)
-│   ├── style.css          # Dashboard styling
-│   └── script.js          # Optional JS for frontend interactivity
-├── logs/                  # Database and log storage
-│   └── threats.db         # SQLite database storing incidents
-├── tests/                 # Test data and scripts
-│   ├── sample_data/       # Safe test URLs/files (EICAR, etc.)
-│   └── test_app.py        # Unit tests for scanning functions
-├── requirements.txt       # Python dependencies
-├── .env                   # API keys and sensitive config
-└── README.md              # Project documentation
+├── app.py                     # Main Flask application
+├── scanners/                  # Threat scanning modules
+│   ├── url_scanner.py         # URL scanning logic (VirusTotal API)
+│   └── file_scanner.py        # File scanning logic (ClamAV)
+├── templates/                 # HTML templates for the web UI
+│   ├── dashboard.html         # Admin dashboard page
+│   └── upload.html            # File/URL upload page
+├── static/                    # CSS, JS, and images
+│   ├── style.css              # Dashboard styling
+│   └── script.js              # Frontend interactivity (optional)
+├── logs/                      # Database and log storage
+│   └── threats.db             # SQLite database for incidents
+├── tests/                     # Test data and scripts
+│   ├── sample_data/           # Safe test URLs/files (EICAR, etc.)
+│   └── test_app.py            # Unit tests for scanning functions
+├── requirements.txt           # Python dependencies
+├── .env                       # Environment variables (e.g., API keys)
+└── README.md                  # Project documentation
+```
 
----
+-----
 
 ## 📦 Installation & Setup
 
-1️⃣ **Clone the Repository**  
-```bash
-git clone https://github.com/your-username/phishshield.git
-cd phishshield
-2️⃣ Install Dependencies
+1.  **Clone the Repository**
 
-```bash
-pip install -r requirements.txt
-3️⃣ Set up ClamAV (Linux example)
+    ```bash
+    git clone https://github.com/your-username/phishshield.git
+    cd phishshield
+    ```
 
-```bash
-sudo apt install clamav
-sudo freshclam  # update virus database
-4️⃣ Add VirusTotal API Key
+2.  **Install Dependencies**
 
-Get your free API key from VirusTotal
+    ```bash
+    pip install -r requirements.txt
+    ```
 
-Store it in a .env file or inside url_scanner.py
+3.  **Set up ClamAV (Linux example)**
 
-5️⃣ Run the Application
+    ```bash
+    sudo apt install clamav
+    sudo freshclam # Update the virus database
+    ```
 
-```bash
+4.  **Add VirusTotal API Key**
 
-python app.py
-6️⃣ Open Dashboard
+      * Obtain a free API key from VirusTotal.
+      * Create a `.env` file in the project root and add your key: `VIRUSTOTAL_API_KEY=your_key_here`.
 
-Visit: http://127.0.0.1:5000/dashboard
+5.  **Run the Application**
 
-🧪 Testing the System
-You can test PhishShield with:
+    ```bash
+    python app.py
+    ```
 
-EICAR test file (download here) – Simulates a virus safely
+6.  **Access the Dashboard**
 
-DVWA – Use for simulating SQLi/XSS + file uploads
+      * Open your browser and navigate to `http://127.0.0.1:5000/dashboard`.
 
-Malicious URL lists from PhishTank or VirusTotal samples
+-----
 
-Kali Linux attack tools – For controlled penetration testing
+## 🧪 Testing the System
 
-📊 Dashboard Preview
-The admin dashboard will show:
+You can test PhishShield using:
 
-Threat type (Phishing Link / Malware File)
+  * **EICAR test file:** A safe, standard test file for antivirus software.
+  * **Damn Vulnerable Web Application (DVWA):** Use it to simulate various file upload and injection attacks.
+  * **Malicious URL Lists:** Use resources like PhishTank or VirusTotal's public samples to test URL detection.
+  * **Kali Linux:** For controlled penetration testing to validate the system's defenses.
 
-Reason for detection
+-----
 
-Timestamp of incident
+## 👥 Team Roles
 
-Source/User info
+  * **Ruth Yeshitila:** Core Logic & URL/File Scanning
+  * **Member 2:** Flask Routing & Middleware Development
+  * **Member 3:** Dashboard UI & Logging System
+  * **Member 4:** Testing, Documentation & Reporting
 
-👥 Team Roles
-Ruth Yeshitila – Core Logic & URL/File Scanning
+-----
 
-Member 2 – Flask Routing & Middleware Development
+## 🚀 Future Improvements
 
-Member 3 – Dashboard UI & Logging System
+  * Integrate a **Machine Learning model** for zero-day phishing detection.
+  * Add **real-time email scanning** functionality.
+  * Implement **cloud deployment** using Docker for enhanced scalability.
+  * Develop a **multi-language dashboard** to support a wider user base.
 
-Member 4 – Testing, Documentation & Report
+-----
 
-🚀 Future Improvements
-Machine Learning model for zero-day phishing detection
+## 📜 License
 
-Real-time email scanning integration
+This project is licensed under the **MIT License**—free for personal and educational use.
 
-Cloud deployment with Docker for scalability
+-----
 
-Multi-language dashboard interface
+## 📧 Contact
 
-📜 License
-MIT License — free for personal and educational use.
+For inquiries or contributions, please contact:
 
-📧 Contact
-For inquiries or contributions:
-Email: ruthye64gmail@example.com
-GitHub: ruye19
+  * **Email:** ruthye64@example.com
+  * **GitHub:** ruye19
+  * **Telegram** @noirHazel
 
-
----
-
-If you want, I can also **generate the matching `requirements.txt`** and **scaffold the folder structure** so your team can just clone it and start coding.  
-Do you want me to prepare that next?
+-----
