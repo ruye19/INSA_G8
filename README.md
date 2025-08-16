@@ -1,178 +1,226 @@
+# EthioScan: Ethiopia-Ready Web Vulnerability Scanner
 
-# 🛡️ PhishShield: Smart URL and File Threat Detection
+## 📌 Overview  
+EthioScan helps Ethiopian teams find and fix the most important **web and API security issues—fast**.  
+The tool systematically analyzes applications using crawling, scanning, and fuzzing to detect common vulnerabilities like:
 
-## 📌 Overview
+- Cross-Site Scripting (XSS)  
+- SQL Injection (SQLi)  
+- Insecure Direct Object References (IDOR)  
 
-PhishShield is a **Python-powered web security tool** designed to detect and block malicious content in real time. It acts as a security layer for web applications, scanning suspicious URLs and files to prevent phishing and malware attacks.
+EthioScan generates detailed, **evidence-rich reports** with clear remediation steps.  
+Our goal: **less noise, more fixes** — built to work under low bandwidth, support local languages, and enforce legal, allowlisted testing.  
 
-This project is built for practical use, focusing on real-world security threats in corporate and educational environments. It integrates with industry-standard threat intelligence APIs and local scanning tools to offer robust, proactive protection.
+---
 
------
+## 🚨 The Problem (Ethiopia in simple terms)
 
-## 🚨 The Problem
+1. **We don’t know the real risk**  
+   - Scanners produce long lists. Teams waste time on low-impact issues while high-risk ones remain.  
 
-Phishing remains one of the most prevalent and damaging cyberattacks, tricking users into revealing sensitive information. While many attacks occur via email, platforms like **Telegram** have become major hotspots for distributing malicious links and files.
+2. **Modern apps are hard to scan**  
+   - SPAs (React/Vue) and APIs need smarter crawling + login handling.  
+   - Basic spiders miss important routes and parameters.  
 
-Cybercriminals exploit Telegram's popularity and file-sharing ease, often targeting users who lack the technical knowledge to identify these threats. This creates a significant gap in digital security, especially in regions where awareness and tools are limited.
+3. **Reports don’t help decision-makers**  
+   - Leaders need summaries (local languages) and proof the issue is real.  
+   - Without evidence + guidance, fixes stall.  
 
-**PhishShield** addresses this by:
+✅ **EthioScan solves this** with:  
+- Risk-based ranking  
+- SPA/API-aware crawling  
+- Proof-based reports with bilingual support  
 
-  * Scanning suspicious URLs for phishing patterns and known malicious domains.
-  * Analyzing shared files for malware signatures.
-  * Providing an intuitive interface for quick checks.
-  * Offering optional integration with platforms like Telegram to automatically flag threats in chats and channels.
-
-By empowering users to identify threats before they interact with them, PhishShield significantly reduces the impact of phishing and malware attacks.
-
------
+---
 
 ## 🎯 Features
 
-  * **URL Threat Detection:** Scans URLs against threat intelligence databases for phishing, malware, and blacklisted domains.
-  * **File Malware Scanning:** Analyzes uploaded files (PDFs, DOCX, ZIP, etc.) for malicious content using a local scanner.
-  * **Admin Dashboard:** Provides a centralized view of all security logs, including threat type, timestamp, and source.
-  * **Real-time Alerts:** Notifies administrators of blocked threats.
-  * **Testing Support:** Compatible with tools like DVWA, Kali Linux, and EICAR test files for comprehensive security testing and simulation.
+- **Systematic analysis:** crawling → scanning → fuzzing  
+- **Crawling:** SPA-smart with Playwright + classic spider  
+- **Scanning:** OWASP Top 10 (auth/session, headers, TLS)  
+- **Fuzzing:** Safe payloads for XSS, SQLi, IDOR  
+- **Web + API testing:** Import OpenAPI, auto-generate requests, abuse tests  
+- **Risk-aware ranking:** CVSS + EPSS/KEV indicators  
+- **Evidence-first reports:** Screenshots, curl repro, request/response logs  
+- **Delta & Verify Fix:** Track changes and confirm patches  
+- **Login support:** Form + OIDC/OAuth2 profiles  
+- **Allowlist-enforced legality**  
+- **Low-bandwidth/offline-friendly**  
+- **Localization:** Executive summaries in Amharic, Afan Oromo, Tigrinya  
 
------
+---
 
-## 🛠️ Tech Stack
+## 🛠 Tech Stack
 
-**Backend:** Python, Flask
+- **Language:** Python 3.x  
+- **Crawler:** Playwright (headless Chromium) + spider  
+- **Checks & fuzzing:** Custom Python probes (OWASP XSS/SQLi/IDOR, headers, TLS)  
+- **API Mode:** OpenAPI import + abuse tests  
+- **Risk:** CVSS + EPSS/KEV  
+- **DB:** SQLite (dev) → Postgres (prod)  
+- **Workers:** Redis + RQ/Celery  
+- **Reports:** Jinja2 → HTML → PDF (WeasyPrint/wkhtmltopdf)  
+- **UI:** HTML/CSS + Chart.js  
 
-**Threat Detection:**
-
-  * VirusTotal API (for URLs)
-  * ClamAV (for file scanning)
-
-**Frontend:** HTML, CSS, Chart.js
-
-**Database:** SQLite (for threat logs)
-
-**Testing Tools:** Kali Linux, DVWA, EICAR test file
-
------
+---
 
 ## 🧩 System Architecture
 
-1.  **User Interaction:** A user uploads a file or submits a URL via the web interface.
-2.  **Request Handling:** The Flask backend intercepts the request.
-3.  **Threat Scanning:**
-      * URLs are sent to the VirusTotal API for analysis.
-      * Files are scanned locally using ClamAV.
-4.  **Decision & Action:**
-      * If the content is clean, it is allowed to proceed.
-      * If malicious, the content is blocked, and the incident is logged.
-5.  **Dashboard Logging:** The incident details are stored in the SQLite database and displayed on the admin dashboard.
+**Ingestion → Scan (crawl/scan/fuzz) → Prioritize → Report**
 
------
+1. **Targets & Auth** – URLs, OpenAPI, login flows (form/OIDC)  
+2. **Crawling** – Playwright for SPAs, spider for static links  
+3. **Checks & Fuzzing** – OWASP checks + safe payloads  
+4. **Risk Engine** – CVSS + EPSS/KEV ranking  
+5. **Evidence** – Screenshots, curl repro, request/response  
+6. **Reports** – Executive summary (local language) + technical appendix  
+
+---
 
 ## 📁 Project Structure
 
 ```
-phishshield/
-├── app.py                     # Main Flask application
-├── scanners/                  # Threat scanning modules
-│   ├── url_scanner.py         # URL scanning logic (VirusTotal API)
-│   └── file_scanner.py        # File scanning logic (ClamAV)
-├── templates/                 # HTML templates for the web UI
-│   ├── dashboard.html         # Admin dashboard page
-│   └── upload.html            # File/URL upload page
-├── static/                    # CSS, JS, and images
-│   ├── style.css              # Dashboard styling
-│   └── script.js              # Frontend interactivity (optional)
-├── logs/                      # Database and log storage
-│   └── threats.db             # SQLite database for incidents
-├── tests/                     # Test data and scripts
-│   ├── sample_data/           # Safe test URLs/files (EICAR, etc.)
-│   └── test_app.py            # Unit tests for scanning functions
-├── requirements.txt           # Python dependencies
-├── .env                       # Environment variables (e.g., API keys)
-└── README.md                  # Project documentation
+ethioscan/
+├── app.py                         # API + dashboard entrypoint
+├── config.py                      # settings, secrets, rate limits
+├── auth/
+│   ├── form_login.py              # form login
+│   └── oidc_client.py             # OIDC/OAuth2 flows
+├── crawl/
+│   ├── playwright_crawler.py      # SPA-aware crawler
+│   └── spider.py                  # classic crawler
+├── checks/
+│   ├── web/
+│   │   ├── injections.py          # SQLi/XSS
+│   │   ├── idor.py                # IDOR checks
+│   │   ├── headers.py             # CSP/HSTS checks
+│   │   └── tls.py                 # TLS/cipher checks
+│   ├── api/
+│   │   ├── openapi_runner.py      # OpenAPI requests
+│   │   └── abuse_tests.py         # rate-limit, auth
+│   └── utils/
+│       ├── payloads.py            # fuzz payloads
+│       ├── evidence.py            # screenshots, curl repro
+│       └── suppression.py         # false positives
+├── risk/
+│   ├── cvss.py
+│   └── rank.py
+├── store/
+│   ├── models.py                  # DB models
+│   └── db.sqlite3                 # dev DB
+├── queue/
+│   └── worker.py
+├── reporting/
+│   ├── templates/
+│   │   ├── exec_summary_am.html   # Amharic
+│   │   ├── exec_summary_en.html   # English
+│   │   └── technical.html
+│   └── export.py
+├── policies/
+│   ├── allowlist.txt
+│   └── scan_profiles.yml
+├── ui/
+│   ├── templates/
+│   │   ├── dashboard.html
+│   │   └── finding.html
+│   └── static/
+├── tests/
+│   └── test_*.py
+├── requirements.txt
+├── .env.example
+└── README.md
 ```
 
------
+---
 
 ## 📦 Installation & Setup
 
-1.  **Clone the Repository**
+### Prerequisites
+- Python 3.10+  
+- Playwright browser dependencies  
+- (Optional) Redis, Docker  
 
-    ```bash
-    git clone https://github.com/your-username/phishshield.git
-    cd phishshield
-    ```
+### Clone
+```bash
+git clone https://github.com/your-username/ethioscan.git
+cd ethioscan
+```
 
-2.  **Install Dependencies**
+### Environment
+```bash
+python -m venv .venv
+source .venv/bin/activate   # Windows: .venv\Scripts\activate
+pip install -r requirements.txt
+cp .env.example .env
+```
 
-    ```bash
-    pip install -r requirements.txt
-    ```
+### Playwright
+```bash
+python -m playwright install --with-deps
+```
 
-3.  **Set up ClamAV (Linux example)**
+### Run (Dev)
+```bash
+# API + Dashboard
+python app.py  
 
-    ```bash
-    sudo apt install clamav
-    sudo freshclam # Update the virus database
-    ```
+# Worker (optional)
+python queue/worker.py
+```
 
-4.  **Add VirusTotal API Key**
+👉 Open: [http://127.0.0.1:5000/dashboard](http://127.0.0.1:5000/dashboard)
 
-      * Obtain a free API key from VirusTotal.
-      * Create a `.env` file in the project root and add your key: `VIRUSTOTAL_API_KEY=your_key_here`.
+⚖️ **Authorization**: Add permitted targets to `policies/allowlist.txt`.  
+EthioScan refuses active scans for domains not on the allowlist.  
 
-5.  **Run the Application**
+---
 
-    ```bash
-    python app.py
-    ```
+## 🧪 Testing
 
-6.  **Access the Dashboard**
+- Lab targets: **OWASP Juice Shop / DVWA** (with authorization)  
+- API mode: Import OpenAPI, test parameters  
+- Fuzzing: Validate detection of XSS/SQLi/IDOR  
+- Evidence: Confirm screenshots + curl repro  
+- Delta & Verify Fix: Add CSP header → re-scan → confirm fix  
 
-      * Open your browser and navigate to `http://127.0.0.1:5000/dashboard`.
+### CLI/API Example
+```bash
+curl -X POST http://127.0.0.1:5000/api/targets   -H "Content-Type: application/json"   -d '{"url":"http://juice-shop.local"}'
 
------
+curl -X POST http://127.0.0.1:5000/api/scans   -H "Content-Type: application/json"   -d '{"target_id":1,"profile":"safe_baseline"}'
+```
 
-## 🧪 Testing the System
-
-You can test PhishShield using:
-
-  * **EICAR test file:** A safe, standard test file for antivirus software.
-  * **Damn Vulnerable Web Application (DVWA):** Use it to simulate various file upload and injection attacks.
-  * **Malicious URL Lists:** Use resources like PhishTank or VirusTotal's public samples to test URL detection.
-  * **Kali Linux:** For controlled penetration testing to validate the system's defenses.
-
------
+---
 
 ## 👥 Team Roles
+- **Crawler & Auth Lead** – SPA crawling, login flows  
+- **Checks & Risk Lead** – Fuzzing, OWASP tests, CVSS ranking  
+- **Backend & Queue Lead** – API, Redis, DB models, allowlist enforcement  
+- **UI & Reporting Lead** – Dashboard, bilingual reports, Delta/Verify Fix  
 
-  * **Ruth Yeshitila:** Core Logic & URL/File Scanning
-  * **Member 2:** Flask Routing & Middleware Development
-  * **Member 3:** Dashboard UI & Logging System
-  * **Member 4:** Testing, Documentation & Reporting
-
------
+---
 
 ## 🚀 Future Improvements
+- CI/CD Gatekeeper (GitHub/GitLab plugins)  
+- GraphQL Mode  
+- Auth Macro Recorder  
+- Plugin SDK  
+- Service Context & SCA Hints  
+- Noise Governance & False-Positive Analytics  
+- Multi-Tenant SaaS + Offline Agents  
+- Auto-Remediation Templates (Nginx/Apache/CSP)  
+- Stakeholder Templates in Amharic/Afan Oromo/Tigrinya  
+- Regional Benchmarks (.et)  
 
-  * Integrate a **Machine Learning model** for zero-day phishing detection.
-  * Add **real-time email scanning** functionality.
-  * Implement **cloud deployment** using Docker for enhanced scalability.
-  * Develop a **multi-language dashboard** to support a wider user base.
-
------
+---
 
 ## 📜 License
+MIT License — for personal and educational use only.  
+⚠️ Active scanning must only be performed on **authorized assets**.  
 
-This project is licensed under the **MIT License**—free for personal and educational use.
-
------
+---
 
 ## 📧 Contact
-
-For inquiries or contributions, please contact:
-
-  * **Email:** ruthye64@example.com
-  * **GitHub:** ruye19
-  * **Telegram** @noirHazel
-
------
+- **Email:** ruthye64@example.com  
+- **GitHub:** [ruye19](https://github.com/ruye19)  
+- **Telegram:** [@noirHazel](https://t.me/noirHazel)  
