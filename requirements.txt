@@ -1,0 +1,4 @@
+requests
+beautifulsoup4
+flask
+#Later, when you add more libraries (like SQLite or testing libraries), you just update this file.
