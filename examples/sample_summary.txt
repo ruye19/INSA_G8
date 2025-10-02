@@ -1,0 +1,15 @@
+EthioScan Vulnerability Assessment Summary
+==================================================
+Target URL: https://unauthorized-site.com
+Scan Time: 2025-10-03 02:39:09
+Total Findings: 0
+
+Findings by Severity:
+--------------------
+Critical: 0
+High: 0
+Medium: 0
+Low: 0
+
+Findings by Category:
+--------------------

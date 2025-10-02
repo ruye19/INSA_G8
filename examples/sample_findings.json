@@ -1,0 +1,12 @@
+{
+  "scan_info": {
+    "target_url": "https://unauthorized-site.com",
+    "scan_time": "2025-10-03 02:39:09",
+    "depth": 1,
+    "concurrency": 5,
+    "max_tests": 5,
+    "lab_mode": false,
+    "total_findings": 0
+  },
+  "findings": []
+}

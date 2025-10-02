@@ -15,8 +15,10 @@ EthioScan is a lightweight Python CLI vulnerability scanner that crawls, fuzzes,
 ## Features
 
 - **Async Web Crawler**: Fast, concurrent crawling with depth control
+- **Security Payloads**: Comprehensive payload sets for SQLi, XSS, IDOR, and more
+- **Intelligent Fuzzing**: Automated test case generation from discovered forms and parameters
 - **Allowlist Enforcement**: Only scan domains in allowlist.txt or with explicit confirmation
-- **Non-destructive Testing**: Conservative payloads, no RCE attempts
+- **Non-destructive Testing**: Conservative payloads, no RCE attempts by default
 - **Rate Limiting**: Default concurrency=5 with polite delays
 - **Multiple Report Formats**: HTML and JSON output
 - **SQLite History**: Optional result storage
@@ -118,6 +120,34 @@ The EthioScan crawler discovers web pages, forms, and parameters through intelli
   ]
 }
 ```
+
+## Fuzzer & Payloads
+
+EthioScan includes a comprehensive fuzzing engine that generates security test cases from discovered forms and parameters:
+
+### Payload Categories
+- **SQL Injection**: Safe SQLi payloads for database testing
+- **Cross-Site Scripting (XSS)**: Reflected XSS detection payloads
+- **IDOR (Insecure Direct Object Reference)**: Numeric parameter manipulation
+- **Command Injection**: Safe command injection tests
+- **LDAP Injection**: Directory service injection tests
+- **NoSQL Injection**: Document database injection tests
+- **Directory Traversal**: Lab-only file system access tests
+
+### Safety Profiles
+- **Safe Profile** (default): Non-destructive payloads only
+- **Lab Profile**: Includes traversal payloads for controlled environments
+- **All Profile**: Complete payload set
+
+### Test Case Generation
+The fuzzer automatically generates test cases by:
+- Injecting payloads into discovered URL parameters
+- Filling form inputs with security test payloads
+- Preserving other parameters with benign values
+- Generating curl commands for manual reproduction
+
+### Lab-Only Protection
+Potentially destructive payloads (like directory traversal) are marked as `lab_only` and require explicit opt-in via `--lab-test` flag. This ensures safe operation in production environments.
 
 ## Safety Features
 
