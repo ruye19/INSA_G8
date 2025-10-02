@@ -1,0 +1,12 @@
+# EthioScan Allowlist
+# Only domains listed here can be scanned without explicit confirmation
+# Add domains you have permission to test
+
+# Example authorized test targets
+localhost
+127.0.0.1
+::1
+juice-shop.herokuapp.com
+demo.testfire.net
+httpbin.org
+example.com
