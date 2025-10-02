@@ -14,12 +14,14 @@ EthioScan is a lightweight Python CLI vulnerability scanner that crawls, fuzzes,
 
 ## Features
 
+- **Async Web Crawler**: Fast, concurrent crawling with depth control
 - **Allowlist Enforcement**: Only scan domains in allowlist.txt or with explicit confirmation
 - **Non-destructive Testing**: Conservative payloads, no RCE attempts
 - **Rate Limiting**: Default concurrency=5 with polite delays
 - **Multiple Report Formats**: HTML and JSON output
 - **SQLite History**: Optional result storage
 - **Rich CLI Interface**: Beautiful terminal output with progress indicators
+- **Robust Error Handling**: Retry logic with exponential backoff
 
 ## Installation
 
@@ -79,6 +81,42 @@ test.example.com
 2. **Use explicit confirmation** (emergency only):
 ```bash
 python cli.py --url https://domain.com --confirm-allow I_HAVE_PERMISSION
+```
+
+## Crawler Behavior
+
+The EthioScan crawler discovers web pages, forms, and parameters through intelligent web crawling:
+
+### Discovery Process
+- **Pages**: Extracts all `<a href>` links and normalizes them to absolute URLs
+- **Forms**: Identifies `<form>` elements with action URLs, methods, and input fields
+- **Parameters**: Extracts query parameters from discovered URLs
+- **Depth Control**: Respects the `--depth` parameter for crawling scope
+
+### URL Processing
+- Normalizes relative URLs to absolute URLs
+- Skips non-HTTP schemes (mailto, tel, javascript, etc.)
+- Preserves query parameters and fragments
+- Deduplicates discovered URLs
+
+### Politeness & Safety
+- **Rate Limiting**: Configurable concurrency with semaphore control
+- **Delays**: Polite delays between requests (default 0.2s)
+- **Retries**: Exponential backoff on failures (up to 2 retries)
+- **Timeouts**: 10-second timeout per request
+- **User Agent**: Identifies as "EthioScan/1.0 (Ethiopian Security Scanner)"
+
+### Output Format
+```json
+{
+  "pages": ["https://example.com/", "https://example.com/about"],
+  "forms": [
+    {"url":"https://example.com/contact","action":"/submit","method":"post","inputs":["name","email"]}
+  ],
+  "params": [
+    {"url":"https://example.com/search?q=test","params":["q"]}
+  ]
+}
 ```
 
 ## Safety Features
