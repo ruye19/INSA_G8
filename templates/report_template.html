@@ -10,20 +10,39 @@
     th, td { border:1px solid #ddd; padding:8px; vertical-align: top; }
     th { background:#f5f5f5; text-align:left; }
     code { background:#f6f8fa; padding:2px 4px; border-radius:4px; }
+    .sev-critical { color:red; font-weight:bold; }
+    .sev-high { color:darkred; font-weight:bold; }
+    .sev-medium { color:orange; font-weight:bold; }
+    .sev-low { color:blue; font-weight:bold; }
+    .sev-unknown { color:gray; }
   </style>
 </head>
 <body>
   <h1>EthioScan Report</h1>
   <p>
-    Target: <strong>{{ meta.target }}</strong> • Generated: {{ meta.generated_at }}
-    • Depth: {{ meta.depth }} • Tests run: {{ meta.tests_run }}
+    Target: <strong>{{ meta.target }}</strong><br>
+    Generated: {{ meta.generated_at }}<br>
+    Depth: {{ meta.depth }} • Concurrency: {{ meta.concurrency }}<br>
+    Tests run: {{ meta.tests_run }} • Format: {{ meta.report_format }}
   </p>
 
   <h2>Summary</h2>
   <ul>
     <li>Total Findings: <strong>{{ summary.total }}</strong></li>
-    <li>By Severity: {{ summary.by_severity }}</li>
-    <li>By Category: {{ summary.by_category }}</li>
+    <li>By Severity:
+      <ul>
+        {% for sev, count in summary.by_severity.items() %}
+          <li>{{ sev | capitalize }}: {{ count }}</li>
+        {% endfor %}
+      </ul>
+    </li>
+    <li>By Category:
+      <ul>
+        {% for cat, count in summary.by_category.items() %}
+          <li>{{ cat | capitalize }}: {{ count }}</li>
+        {% endfor %}
+      </ul>
+    </li>
   </ul>
 
   <h2>Findings</h2>
@@ -36,11 +55,19 @@
         {% for f in findings %}
         <tr>
           <td>{{ f.category }}</td>
-          <td>{{ f.severity }}</td>
+          <td class="sev-{{ f.severity | default('unknown') | lower }}">{{ f.severity | capitalize }}</td>
           <td><code>{{ f.url or f.final_url }}</code></td>
           <td>{{ f.param }}</td>
-          <td><code>{{ f.payload }}</code></td>
-          <td><pre style="white-space:pre-wrap">{{ f.evidence }}</pre></td>
+          <td><code>
+            {% if f.payload is string %}
+              {{ f.payload }}
+            {% elif f.payload is mapping %}
+              {{ f.payload.payload }}
+            {% else %}
+              {{ f.payload | string }}
+            {% endif %}
+          </code></td>
+          <td><pre style="white-space:pre-wrap">{{ f.evidence | default("") }}</pre></td>
         </tr>
         {% endfor %}
       {% else %}
