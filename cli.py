@@ -133,6 +133,19 @@ Safety Notice:
         '--confirm-allow',
         help='Confirmation string to bypass allowlist (use: I_HAVE_PERMISSION)'
     )
+    parser.add_argument(
+        '--lab',
+        action='store_true',
+        help='Enable lab-only payloads (potentially destructive)'
+    )
+
+    parser.add_argument(
+        '--max-tests',
+        type=int,
+        default=200,
+        help='Maximum number of test cases to generate (default: 200)'
+    )
+
     
     args = parser.parse_args()
     
