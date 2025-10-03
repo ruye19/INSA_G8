@@ -16,6 +16,8 @@ from crawler import crawl
 from payloads import get_payloads
 from fuzzer import generate_tests_from_params, generate_tests_from_forms, submit_test_case
 from scanner import Scanner
+from reporter import save_report
+
 from rich.console import Console
 from rich.progress import Progress, SpinnerColumn, TextColumn, BarColumn, TaskProgressColumn
 
@@ -392,6 +394,16 @@ class EthioScanOrchestrator:
             # Save results
             self.save_findings(findings)
             self.create_summary(findings)
+
+            # Generate final report
+            meta = {
+                        "target": self.args.url,
+                        "depth": self.args.depth,
+                        "concurrency": self.args.concurrency,
+                        "report_format": self.args.report,
+                    }
+            save_report(meta, findings, self.args.report, self.args.out, tests_run=len(findings))
+            console.print(f"[green]Detailed report saved to {self.args.out}[/green]")
             
             # Print final summary
             elapsed = time.time() - start_time

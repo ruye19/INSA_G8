@@ -7,6 +7,7 @@ A lightweight Python CLI vulnerability scanner that crawls, fuzzes, scans, and r
 import argparse
 import sys
 import os
+import asyncio
 from urllib.parse import urlparse
 from rich.console import Console
 from rich.panel import Panel
@@ -81,7 +82,7 @@ def main():
 Examples:
   python cli.py --url https://example.com
   python cli.py --url https://example.com --depth 3 --report json
-  python cli.py --url https://example.com --confirm-allow I_HAVE_PERMISSION
+  python cli.py --url https://example.com --confirm-allow I_HAVE_PERMISSION --mode advanced
 
 Safety Notice:
   EthioScan is designed for authorized testing only. Always ensure you have
@@ -134,6 +135,26 @@ Safety Notice:
         help='Confirmation string to bypass allowlist (use: I_HAVE_PERMISSION)'
     )
     
+    parser.add_argument(
+        '--lab',
+        action='store_true',
+        help='Enable lab-only payloads (potentially destructive)'
+    )
+
+    parser.add_argument(
+        '--max-tests',
+        type=int,
+        default=200,
+        help='Maximum number of test cases to generate (default: 200)'
+    )
+
+    parser.add_argument(
+        '--mode',
+        choices=['simple', 'advanced'],
+        default='simple',
+        help='Choose orchestrator mode: simple (utils) or advanced (run_scan)'
+    )
+    
     args = parser.parse_args()
     
     # Print banner
@@ -150,13 +171,18 @@ Safety Notice:
     console.print(f"  Output file: {args.out}")
     console.print(f"  Concurrency: {args.concurrency}")
     console.print(f"  History enabled: {args.history}")
+    console.print(f"  Mode: {args.mode}")
     
-    # Import and call the orchestrator
     try:
-        from utils import run_scan
-        run_scan(args)
-    except ImportError:
-        console.print("[yellow]Utils module not yet implemented. This is expected for the skeleton.[/yellow]")
+        if args.mode == "simple":
+            from utils import run_scan
+            run_scan(args)
+        else:
+            from run_scan import EthioScanOrchestrator
+            orchestrator = EthioScanOrchestrator(args)
+            asyncio.run(orchestrator.run())
+    except ImportError as e:
+        console.print(f"[yellow]Import error: {e}[/yellow]")
         console.print("[green]EthioScan skeleton is working correctly![/green]")
         sys.exit(0)
 

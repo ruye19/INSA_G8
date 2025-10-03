@@ -10,7 +10,8 @@ from crawler import crawl, crawl_sync
 from fuzzer import generate_tests_from_params, generate_tests_from_forms, submit_test_case, get_test_case_summary
 from scanner import Scanner
 from payloads import get_payloads
-# from reporter import save_report  # you'll implement this next
+from reporter import save_report
+
 
 console = Console()
 
@@ -69,10 +70,19 @@ def run_scan(args):
         asyncio.run(run_tests())
         
         console.print(f"[red]Detected {len(findings)} findings[/red]")
+
         
-        # Step 4: Reporting (to implement)
-        # save_report(findings, args.report, args.out)
-        console.print("[yellow]Reporting still needs to be implemented[/yellow]")
+        # Step 4: Reporting
+        meta = {
+            "target": args.url,
+            "depth": args.depth,
+            "concurrency": args.concurrency,
+            "report_format": args.report,
+                }
+        save_report(meta, findings, args.report, args.out, tests_run=len(findings))
+        console.print(f"[green]Report generated at {args.out}[/green]")
+
+
         
     except Exception as e:
         console.print(f"[red]Error during scanning: {e}[/red]")
