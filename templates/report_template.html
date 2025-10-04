@@ -10,10 +10,12 @@
     th, td { border:1px solid #ddd; padding:8px; vertical-align: top; }
     th { background:#f5f5f5; text-align:left; }
     code { background:#f6f8fa; padding:2px 4px; border-radius:4px; }
+
+    /* Severity colors */
     .sev-critical { color:red; font-weight:bold; }
-    .sev-high { color:darkred; font-weight:bold; }
-    .sev-medium { color:orange; font-weight:bold; }
-    .sev-low { color:blue; font-weight:bold; }
+    .sev-high { color:darkorange; font-weight:bold; }
+    .sev-medium { color:goldenrod; font-weight:bold; }
+    .sev-low { color:steelblue; font-weight:bold; }
     .sev-unknown { color:gray; }
   </style>
 </head>
@@ -32,14 +34,25 @@
     <li>By Severity:
       <ul>
         {% for sev, count in summary.by_severity.items() %}
-          <li>{{ sev | capitalize }}: {{ count }}</li>
+          <li>
+            <span class="sev-{{ sev | default('unknown') | lower }}">
+              {{ sev | capitalize }}
+            </span>: {{ count }}
+          </li>
         {% endfor %}
       </ul>
     </li>
     <li>By Category:
       <ul>
         {% for cat, count in summary.by_category.items() %}
-          <li>{{ cat | capitalize }}: {{ count }}</li>
+          <li>{{ cat | upper }}: {{ count }}</li>
+        {% endfor %}
+      </ul>
+    </li>
+    <li>By URL:
+      <ul>
+        {% for url, count in summary.by_url.items() %}
+          <li><code>{{ url }}</code>: {{ count }}</li>
         {% endfor %}
       </ul>
     </li>
@@ -48,16 +61,25 @@
   <h2>Findings</h2>
   <table>
     <thead>
-      <tr><th>Category</th><th>Severity</th><th>URL</th><th>Param</th><th>Payload</th><th>Evidence</th></tr>
+      <tr>
+        <th>Category</th>
+        <th>Severity</th>
+        <th>URL</th>
+        <th>Param</th>
+        <th>Payload</th>
+        <th>Evidence</th>
+      </tr>
     </thead>
     <tbody>
       {% if findings %}
         {% for f in findings %}
         <tr>
           <td>{{ f.category }}</td>
-          <td class="sev-{{ f.severity | default('unknown') | lower }}">{{ f.severity | capitalize }}</td>
-          <td><code>{{ f.url or f.final_url }}</code></td>
-          <td>{{ f.param }}</td>
+          <td class="sev-{{ f.severity | default('unknown') | lower }}">
+            {{ f.severity | capitalize }}
+          </td>
+          <td><code>{{ f.url or f.final_url or "N/A" }}</code></td>
+          <td>{{ f.param or "-" }}</td>
           <td><code>
             {% if f.payload is string %}
               {{ f.payload }}

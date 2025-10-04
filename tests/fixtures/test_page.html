@@ -1,49 +1,31 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Test Page for EthioScan Crawler</title>
+  <meta charset="utf-8">
+  <title>EthioScan Test Page</title>
 </head>
 <body>
-    <h1>Test Page</h1>
-    
-    <!-- Test links -->
-    <a href="/about">About Page</a>
-    <a href="https://example.com/contact">Contact Page</a>
-    <a href="contact.html">Contact HTML</a>
-    <a href="mailto:test@example.com">Email Link</a>
-    <a href="tel:+1234567890">Phone Link</a>
-    <a href="javascript:alert('test')">JavaScript Link</a>
-    <a href="/search?q=test&category=all">Search with Params</a>
-    
-    <!-- Test forms -->
-    <form action="/submit" method="post">
-        <input type="text" name="username" placeholder="Username">
-        <input type="email" name="email" placeholder="Email">
-        <textarea name="message" placeholder="Message"></textarea>
-        <select name="country">
-            <option value="us">United States</option>
-            <option value="et">Ethiopia</option>
-        </select>
-        <button type="submit">Submit</button>
-    </form>
-    
-    <form action="/login" method="get">
-        <input type="text" name="user" placeholder="User">
-        <input type="password" name="pass" placeholder="Password">
-        <button type="submit">Login</button>
-    </form>
-    
-    <!-- Form without action -->
-    <form method="post">
-        <input type="text" name="data" placeholder="Data">
-        <button type="submit">Submit</button>
-    </form>
-    
-    <!-- Links with query parameters -->
-    <a href="/products?category=electronics&sort=price">Electronics</a>
-    <a href="/products?category=books&sort=name">Books</a>
-    
+  <h1>EthioScan Local Test Page</h1>
+
+  <p>Use the form below to simulate different vulnerabilities.</p>
+
+  <form action="/submit" method="post">
+
+    <label for="username">Username:</label>
+    <input type="text" id="username" name="username">
+
+    <br><br>
+    <label for="vuln">Choose vulnerability type:</label>
+    <select name="vuln" id="vuln">
+      <option value="">-- Safe (escaped) --</option>
+      <option value="xss">Cross-Site Scripting (XSS)</option>
+      <option value="sqli">SQL Injection</option>
+      <option value="cmd">Command Injection</option>
+      <option value="info">Information Disclosure</option>
+    </select>
+
+    <br><br>
+    <button type="submit">Submit</button>
+  </form>
 </body>
 </html>

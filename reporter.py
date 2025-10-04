@@ -1,4 +1,3 @@
-# reporter.py
 from __future__ import annotations
 import json
 from datetime import datetime
@@ -10,10 +9,29 @@ from jinja2 import Environment, FileSystemLoader, select_autoescape, TemplateNot
 TEMPLATES_DIR = Path("templates")
 TEMPLATE_NAME = "report_template.html"
 
+
+# ---------------------------
+# Helpers
+# ---------------------------
 def _norm_sev(v: Dict[str, Any]) -> str:
     return (v.get("severity") or "unknown").lower()
 
+
+def _sev_color(sev: str) -> str:
+    sev = sev.lower()
+    if sev == "critical":
+        return "red"
+    if sev == "high":
+        return "darkorange"
+    if sev == "medium":
+        return "goldenrod"
+    if sev == "low":
+        return "steelblue"
+    return "gray"
+
+
 def _summarize(findings: List[Dict[str, Any]]) -> Dict[str, Any]:
+    """Aggregate findings by severity, category, and URL."""
     by_sev: Dict[str, int] = {}
     by_cat: Dict[str, int] = {}
     by_url: Dict[str, int] = {}
@@ -31,9 +49,14 @@ def _summarize(findings: List[Dict[str, Any]]) -> Dict[str, Any]:
         "by_url": dict(sorted(by_url.items())),
     }
 
+
 def _ensure_parent(path: Path) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
 
+
+# ---------------------------
+# Rendering
+# ---------------------------
 def _render_html(meta: Dict[str, Any], findings: List[Dict[str, Any]], summary: Dict[str, Any]) -> str:
     env = Environment(
         loader=FileSystemLoader(str(TEMPLATES_DIR)),
@@ -47,7 +70,9 @@ def _render_html(meta: Dict[str, Any], findings: List[Dict[str, Any]], summary: 
     except TemplateNotFound:
         return _fallback_html(meta, findings, summary)
 
+
 def _fallback_html(meta: Dict[str, Any], findings: List[Dict[str, Any]], summary: Dict[str, Any]) -> str:
+    """Minimal fallback if template is missing."""
     rows = []
     for f in findings or []:
         payload = f.get("payload")
@@ -56,13 +81,14 @@ def _fallback_html(meta: Dict[str, Any], findings: List[Dict[str, Any]], summary
         rows.append(
             f"<tr>"
             f"<td>{f.get('category','')}</td>"
-            f"<td>{f.get('severity','')}</td>"
+            f"<td><span style='color:{_sev_color(f.get('severity',''))}; font-weight:bold'>{f.get('severity','')}</span></td>"
             f"<td><code>{(f.get('url') or f.get('final_url') or '')}</code></td>"
             f"<td>{f.get('param','')}</td>"
             f"<td><code>{payload}</code></td>"
             f"<td><pre style='white-space:pre-wrap'>{(f.get('evidence','')[:500])}</pre></td>"
             f"</tr>"
         )
+
     return f"""<!doctype html>
 <html lang="en">
 <head>
@@ -79,14 +105,25 @@ def _fallback_html(meta: Dict[str, Any], findings: List[Dict[str, Any]], summary
 </head>
 <body>
   <h1>EthioScan Report</h1>
-  <p>Target: <strong>{meta.get('target','')}</strong> • Generated: {meta.get('generated_at','')}
-  • Depth: {meta.get('depth','-')} • Tests run: {meta.get('tests_run','-')}</p>
+  <p>
+    Target: <strong>{meta.get('target','')}</strong> • 
+    Generated: {meta.get('generated_at','')} • 
+    Depth: {meta.get('depth','-')} • 
+    Concurrency: {meta.get('concurrency','-')} • 
+    Tests run: {meta.get('tests_run','-')}
+  </p>
 
   <h2>Summary</h2>
   <ul>
     <li>Total Findings: <strong>{summary['total']}</strong></li>
-    <li>By Severity: {summary['by_severity']}</li>
-    <li>By Category: {summary['by_category']}</li>
+    <li>By Severity:</li>
+    <ul>
+      {''.join(f'<li><span style="color:{_sev_color(sev)}; font-weight:bold">{sev.capitalize()}</span>: {count}</li>' for sev, count in summary['by_severity'].items())}
+    </ul>
+    <li>By Category:</li>
+    <ul>
+      {''.join(f'<li>{cat.upper()}: {count}</li>' for cat, count in summary['by_category'].items())}
+    </ul>
   </ul>
 
   <h2>Findings</h2>
@@ -101,7 +138,12 @@ def _fallback_html(meta: Dict[str, Any], findings: List[Dict[str, Any]], summary
 </body>
 </html>"""
 
+
+# ---------------------------
+# Generators
+# ---------------------------
 def generate_json_report(meta: Dict[str, Any], findings: List[Dict[str, Any]], out_file: str) -> str:
+    """Write JSON report."""
     data = {
         "meta": meta,
         "findings": findings or [],
@@ -110,10 +152,12 @@ def generate_json_report(meta: Dict[str, Any], findings: List[Dict[str, Any]], o
     }
     path = Path(out_file)
     _ensure_parent(path)
-    path.write_text(json.dumps(data, indent=2), encoding="utf-8")
+    path.write_text(json.dumps(data, indent=2, ensure_ascii=False), encoding="utf-8")
     return str(path.resolve())
 
+
 def generate_html_report(meta: Dict[str, Any], findings: List[Dict[str, Any]], out_file: str) -> str:
+    """Write HTML report, fallback if template not found."""
     summary = _summarize(findings)
     meta = dict(meta or {})
     meta.setdefault("generated_at", datetime.utcnow().isoformat() + "Z")
@@ -123,10 +167,20 @@ def generate_html_report(meta: Dict[str, Any], findings: List[Dict[str, Any]], o
     path.write_text(html, encoding="utf-8")
     return str(path.resolve())
 
-def save_report(meta: Dict[str, Any], findings: List[Dict[str, Any]], report_format: str, out_file: str, tests_run: int | None = None) -> str:
+
+def save_report(
+    meta: Dict[str, Any],
+    findings: List[Dict[str, Any]],
+    report_format: str,
+    out_file: str,
+    tests_run: int | None = None,
+) -> str:
+    """Save EthioScan report in HTML or JSON."""
     meta = dict(meta or {})
     if tests_run is not None:
         meta["tests_run"] = tests_run
+    meta.setdefault("generated_at", datetime.utcnow().isoformat() + "Z")
+
     if report_format == "json":
         return generate_json_report(meta, findings, out_file)
     return generate_html_report(meta, findings, out_file)

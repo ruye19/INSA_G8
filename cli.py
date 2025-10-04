@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 EthioScan - CLI Web Vulnerability Scanner
-A lightweight Python CLI vulnerability scanner that crawls, fuzzes, scans, and reports findings.
+Advanced-only mode: crawler + fuzzer + scanner + reporter.
 """
 
 import argparse
@@ -74,7 +74,7 @@ def check_allowlist(url, confirm_string=None):
 
 
 def main():
-    """Main CLI entry point."""
+    """Main CLI entry point (advanced-only)."""
     parser = argparse.ArgumentParser(
         description="EthioScan - Web Vulnerability Scanner",
         formatter_class=argparse.RawDescriptionHelpFormatter,
@@ -82,7 +82,7 @@ def main():
 Examples:
   python cli.py --url https://example.com
   python cli.py --url https://example.com --depth 3 --report json
-  python cli.py --url https://example.com --confirm-allow I_HAVE_PERMISSION --mode advanced
+  python cli.py --url https://example.com --confirm-allow I_HAVE_PERMISSION
 
 Safety Notice:
   EthioScan is designed for authorized testing only. Always ensure you have
@@ -146,27 +146,6 @@ Safety Notice:
         default=200,
         help='Maximum number of test cases to generate (default: 200)'
     )
-
-    
-    parser.add_argument(
-        '--lab',
-        action='store_true',
-        help='Enable lab-only payloads (potentially destructive)'
-    )
-
-    parser.add_argument(
-        '--max-tests',
-        type=int,
-        default=200,
-        help='Maximum number of test cases to generate (default: 200)'
-    )
-
-    parser.add_argument(
-        '--mode',
-        choices=['simple', 'advanced'],
-        default='simple',
-        help='Choose orchestrator mode: simple (utils) or advanced (run_scan)'
-    )
     
     args = parser.parse_args()
     
@@ -177,23 +156,18 @@ Safety Notice:
     if not check_allowlist(args.url, args.confirm_allow):
         sys.exit(1)
     
-    console.print(f"[green]Starting EthioScan on {args.url}[/green]")
-    console.print(f"[blue]Configuration:[/blue]")
     console.print(f"  Depth: {args.depth}")
     console.print(f"  Report format: {args.report}")
     console.print(f"  Output file: {args.out}")
     console.print(f"  Concurrency: {args.concurrency}")
     console.print(f"  History enabled: {args.history}")
-    console.print(f"  Mode: {args.mode}")
-    
+    console.print(f"  Max tests: {args.max_tests}")
+    console.print(f"  Lab mode: {args.lab}")
+
     try:
-        if args.mode == "simple":
-            from utils import run_scan
-            run_scan(args)
-        else:
-            from run_scan import EthioScanOrchestrator
-            orchestrator = EthioScanOrchestrator(args)
-            asyncio.run(orchestrator.run())
+        from run_scan import EthioScanOrchestrator
+        orchestrator = EthioScanOrchestrator(args)
+        asyncio.run(orchestrator.run())
     except ImportError as e:
         console.print(f"[yellow]Import error: {e}[/yellow]")
         console.print("[green]EthioScan skeleton is working correctly![/green]")

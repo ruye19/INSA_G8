@@ -1,12 +1,13 @@
 """
 EthioScan Crawler - Async web crawler for discovering pages, forms, and parameters
+Improved: accepts POST forms, normalizes absolute/relative action URLs,
+and logs discovered forms/params for easier debugging.
 """
 
 import asyncio
 import time
 from typing import Dict, List, Set, Tuple, Optional
-from urllib.parse import urljoin, urlparse, parse_qs, unquote
-from urllib.robotparser import RobotFileParser
+from urllib.parse import urljoin, urlparse, parse_qs
 import aiohttp
 import requests
 from bs4 import BeautifulSoup
@@ -17,14 +18,14 @@ console = Console()
 
 class Crawler:
     """Async web crawler for EthioScan"""
-    
+
     def __init__(self, concurrency: int = 5, delay: float = 0.2, timeout: int = 10):
         self.concurrency = concurrency
         self.delay = delay
         self.timeout = timeout
         self.semaphore = asyncio.Semaphore(concurrency)
         self.session: Optional[aiohttp.ClientSession] = None
-        
+
     async def __aenter__(self):
         """Async context manager entry"""
         connector = aiohttp.TCPConnector(limit=self.concurrency)
@@ -33,11 +34,11 @@ class Crawler:
             connector=connector,
             timeout=timeout,
             headers={
-                'User-Agent': 'EthioScan/1.0 (Ethiopian Security Scanner)'
+                "User-Agent": "EthioScan/1.0 (Ethiopian Security Scanner)"
             }
         )
         return self
-        
+
     async def __aexit__(self, exc_type, exc_val, exc_tb):
         """Async context manager exit"""
         if self.session:
@@ -47,57 +48,32 @@ class Crawler:
 def normalize_url(url: str, base_url: str) -> Optional[str]:
     """
     Normalize a URL to absolute form.
-    
-    Args:
-        url: URL to normalize (can be relative)
-        base_url: Base URL for resolving relative URLs
-        
-    Returns:
-        Normalized absolute URL or None if invalid
+
+    Returns normalized absolute URL or None if invalid / non-http(s).
     """
     try:
-        # Handle empty or None URLs
-        if not url or url.strip() == '':
+        if not url or url.strip() == "":
             return None
-            
-        # Skip non-HTTP schemes
-        parsed = urlparse(url)
-        if parsed.scheme and parsed.scheme not in ['http', 'https']:
+
+        # Resolve with base
+        absolute = urljoin(base_url, url)
+        parsed = urlparse(absolute)
+
+        # Only http/https are supported
+        if parsed.scheme not in ("http", "https"):
             return None
-            
-        # Skip mailto, tel, javascript, etc.
-        if parsed.scheme in ['mailto', 'tel', 'javascript', 'data', 'ftp']:
-            return None
-            
-        # Make absolute URL
-        absolute_url = urljoin(base_url, url)
-        parsed_absolute = urlparse(absolute_url)
-        
-        # Ensure we have a valid scheme and netloc
-        if not parsed_absolute.scheme or not parsed_absolute.netloc:
-            return None
-            
-        # Remove fragment
-        normalized = f"{parsed_absolute.scheme}://{parsed_absolute.netloc}{parsed_absolute.path}"
-        if parsed_absolute.query:
-            normalized += f"?{parsed_absolute.query}"
-            
+
+        # Build normalized URL (preserve path + query)
+        normalized = f"{parsed.scheme}://{parsed.netloc}{parsed.path or '/'}"
+        if parsed.query:
+            normalized += f"?{parsed.query}"
         return normalized
-        
     except Exception:
         return None
 
 
 def extract_query_params(url: str) -> List[str]:
-    """
-    Extract query parameter names from a URL.
-    
-    Args:
-        url: URL to extract parameters from
-        
-    Returns:
-        List of parameter names
-    """
+    """Return list of parameter names extracted from the URL's query string."""
     try:
         parsed = urlparse(url)
         if parsed.query:
@@ -110,15 +86,8 @@ def extract_query_params(url: str) -> List[str]:
 
 async def fetch_page(session: aiohttp.ClientSession, url: str, retries: int = 2) -> Tuple[int, str, str]:
     """
-    Fetch a page with retry logic and exponential backoff.
-    
-    Args:
-        session: aiohttp session
-        url: URL to fetch
-        retries: Number of retries on failure
-        
-    Returns:
-        Tuple of (status_code, content, final_url)
+    Fetch a page with retry and exponential backoff.
+    Returns (status_code, content_text, final_url).
     """
     for attempt in range(retries + 1):
         try:
@@ -127,10 +96,9 @@ async def fetch_page(session: aiohttp.ClientSession, url: str, retries: int = 2)
                 return response.status, content, str(response.url)
         except Exception as e:
             if attempt < retries:
-                # Exponential backoff
-                delay = 2 ** attempt
-                console.print(f"[yellow]Retrying {url} in {delay}s (attempt {attempt + 1}/{retries + 1})[/yellow]")
-                await asyncio.sleep(delay)
+                backoff = 2 ** attempt
+                console.print(f"[yellow]Retrying {url} in {backoff}s (attempt {attempt + 1})[/yellow]")
+                await asyncio.sleep(backoff)
             else:
                 console.print(f"[red]Failed to fetch {url}: {e}[/red]")
                 return 0, "", url
@@ -138,242 +106,211 @@ async def fetch_page(session: aiohttp.ClientSession, url: str, retries: int = 2)
 
 def parse_html(html: str, base_url: str) -> Tuple[Set[str], List[Dict], List[Dict]]:
     """
-    Parse HTML content to extract links, forms, and parameters.
-    
-    Args:
-        html: HTML content
-        base_url: Base URL for resolving relative URLs
-        
-    Returns:
-        Tuple of (links_set, forms_list, params_list)
+    Parse HTML content to extract links, forms, and params.
+    Returns (links_set, forms_list, params_list).
     """
-    soup = BeautifulSoup(html, 'html.parser')
-    links = set()
-    forms = []
-    params = []
-    
-    # Extract links
-    for a_tag in soup.find_all('a', href=True):
-        normalized_url = normalize_url(a_tag['href'], base_url)
-        if normalized_url:
-            links.add(normalized_url)
-            # Extract query parameters
-            query_params = extract_query_params(normalized_url)
-            if query_params:
-                params.append({
-                    'url': normalized_url,
-                    'params': query_params
-                })
-    
+    soup = BeautifulSoup(html, "html.parser")
+    links: Set[str] = set()
+    forms: List[Dict] = []
+    params: List[Dict] = []
+
+    # Extract links (<a href>)
+    for a_tag in soup.find_all("a", href=True):
+        normalized = normalize_url(a_tag["href"], base_url)
+        if normalized:
+            links.add(normalized)
+            qnames = extract_query_params(normalized)
+            if qnames:
+                params.append({"url": normalized, "params": qnames})
+
     # Extract forms
-    for form in soup.find_all('form'):
-        action = form.get('action', '')
-        method = form.get('method', 'get').lower()
-        
-        # Normalize action URL
-        action_url = urljoin(base_url, action) if action else base_url
-        
-        # Extract input names
-        inputs = []
-        for inp in form.find_all(['input', 'textarea', 'select']):
-            name = inp.get('name')
+    for form in soup.find_all("form"):
+        raw_action = form.get("action", "")
+        raw_method = form.get("method", "get").lower().strip()
+
+        # Normalize action to absolute URL (use base_url when action is empty)
+        action_url = normalize_url(raw_action, base_url) if raw_action else normalize_url(base_url, base_url)
+
+        # If normalize_url returned None (e.g., javascript:), fallback to base_url
+        if not action_url:
+            action_url = normalize_url(base_url, base_url)
+
+        # Collect input/textarea/select names
+        inputs: List[str] = []
+        for inp in form.find_all(["input", "textarea", "select"]):
+            name = inp.get("name")
             if name:
                 inputs.append(name)
-        
-        forms.append({
-            'url': base_url,
-            'action': action_url,
-            'method': method,
-            'inputs': inputs
-        })
-    
+
+        # Only accept common methods: get & post (avoid weird ones by default)
+        method = raw_method if raw_method in ("get", "post") else "get"
+
+        form_entry = {
+            "url": normalize_url(base_url, base_url) or base_url,
+            "action": action_url,
+            "method": method,
+            "inputs": inputs,
+        }
+
+        forms.append(form_entry)
+
+        # If the action URL has query params, register them as parameterized URLs
+        qnames = extract_query_params(action_url)
+        if qnames:
+            params.append({"url": action_url, "params": qnames})
+
+        # Debug print for easier troubleshooting during development
+        console.print(f"[debug] Found form -> action: {action_url} method: {method} inputs: {inputs}")
+
     return links, forms, params
 
 
 async def crawl(start_url: str, depth: int = 2, concurrency: int = 5, delay: float = 0.2) -> Dict:
     """
-    Crawl start_url up to specified depth.
-    
-    Args:
-        start_url: Starting URL to crawl
-        depth: Maximum crawling depth
-        concurrency: Number of concurrent requests
-        delay: Delay between requests (seconds)
-        
-    Returns:
-        Dictionary with pages, forms, and params
+    Crawl start_url up to specified depth and return discovered pages, forms, params.
     """
     start_time = time.time()
     console.print(f"[EthioScan] Crawling {start_url} (depth {depth})")
-    
-    # Initialize crawler
+
     async with Crawler(concurrency=concurrency, delay=delay) as crawler:
         visited_urls: Set[str] = set()
         all_pages: Set[str] = set()
         all_forms: List[Dict] = []
         all_params: List[Dict] = []
-        
-        # Queue for BFS crawling
-        url_queue = [(start_url, 0)]  # (url, current_depth)
-        
+
+        # BFS queue: (url, depth_level)
+        url_queue: List[Tuple[str, int]] = [(start_url, 0)]
+
         while url_queue:
-            # Get URLs for current depth level
-            current_depth_urls = [(url, depth_level) for url, depth_level in url_queue if depth_level <= depth]
-            url_queue = [(url, depth_level) for url, depth_level in url_queue if depth_level > depth]
-            
-            if not current_depth_urls:
+            # Get items within allowed depth
+            current_level = [(u, d) for u, d in url_queue if d <= depth]
+            url_queue = [(u, d) for u, d in url_queue if d > depth]
+
+            if not current_level:
                 break
-                
-            # Process URLs at current depth
+
             tasks = []
-            for url, current_depth in current_depth_urls:
-                if url not in visited_urls and current_depth <= depth:
+            for url, cur_depth in current_level:
+                if url not in visited_urls and cur_depth <= depth:
                     visited_urls.add(url)
-                    task = crawler.semaphore.acquire()
-                    tasks.append((task, url, current_depth))
-            
-            # Execute tasks
-            for task, url, current_depth in tasks:
-                await task
+                    tasks.append((await crawler.semaphore.acquire(), url, cur_depth))
+
+            # Execute sequentially but respect concurrency by semaphore acquisitions
+            for sem_acq, url, cur_depth in tasks:
                 try:
                     status, content, final_url = await fetch_page(crawler.session, url)
-                    
-                    if status == 200 and content:
-                        all_pages.add(final_url)
-                        
-                        # Parse HTML
-                        links, forms, params = parse_html(content, final_url)
-                        
-                        # Add forms and params
+
+                    # Consider a page as discovered if we got meaningful content (status 200 or any HTML)
+                    if status and content:
+                        # Normalize final_url
+                        normalized_final = normalize_url(final_url, final_url) or final_url
+                        all_pages.add(normalized_final)
+
+                        links, forms, params = parse_html(content, normalized_final)
                         all_forms.extend(forms)
                         all_params.extend(params)
-                        
-                        # Add new URLs to queue for next depth
-                        if current_depth < depth:
+
+                        if cur_depth < depth:
                             for link in links:
                                 if link not in visited_urls:
-                                    url_queue.append((link, current_depth + 1))
-                    
-                    # Polite delay
+                                    url_queue.append((link, cur_depth + 1))
+
+                    # Polite delay between requests
                     await asyncio.sleep(delay)
-                    
+
                 except Exception as e:
                     console.print(f"[red]Error processing {url}: {e}[/red]")
                 finally:
                     crawler.semaphore.release()
-    
-    # Deduplicate results
-    unique_forms = []
+
+    # Deduplicate forms (url, action, method)
+    unique_forms: List[Dict] = []
     seen_forms = set()
-    for form in all_forms:
-        form_key = (form['url'], form['action'], form['method'])
-        if form_key not in seen_forms:
-            seen_forms.add(form_key)
-            unique_forms.append(form)
-    
-    unique_params = []
+    for f in all_forms:
+        key = (f.get("url"), f.get("action"), f.get("method"))
+        if key not in seen_forms:
+            seen_forms.add(key)
+            unique_forms.append(f)
+
+    # Deduplicate params by URL
+    unique_params: List[Dict] = []
     seen_params = set()
-    for param in all_params:
-        param_key = param['url']
-        if param_key not in seen_params:
-            seen_params.add(param_key)
-            unique_params.append(param)
-    
+    for p in all_params:
+        key = p.get("url")
+        if key and key not in seen_params:
+            seen_params.add(key)
+            unique_params.append(p)
+
     elapsed = time.time() - start_time
     console.print(f"[EthioScan] Discovered {len(all_pages)} pages, {len(unique_forms)} forms, {len(unique_params)} paramized URLs")
     console.print(f"[EthioScan] Done crawling (elapsed {elapsed:.1f}s)")
-    
-    return {
-        'pages': sorted(list(all_pages)),
-        'forms': unique_forms,
-        'params': unique_params
-    }
+
+    return {"pages": sorted(list(all_pages)), "forms": unique_forms, "params": unique_params}
 
 
 # Synchronous fallback using requests
 def crawl_sync(start_url: str, depth: int = 2, concurrency: int = 5, delay: float = 0.2) -> Dict:
-    """
-    Synchronous fallback crawler using requests library.
-    
-    Args:
-        start_url: Starting URL to crawl
-        depth: Maximum crawling depth
-        concurrency: Number of concurrent requests (ignored in sync version)
-        delay: Delay between requests (seconds)
-        
-    Returns:
-        Dictionary with pages, forms, and params
-    """
     console.print("[yellow]Using synchronous crawler (aiohttp not available)[/yellow]")
-    
+
     start_time = time.time()
     console.print(f"[EthioScan] Crawling {start_url} (depth {depth})")
-    
+
     visited_urls: Set[str] = set()
     all_pages: Set[str] = set()
     all_forms: List[Dict] = []
     all_params: List[Dict] = []
-    
-    url_queue = [(start_url, 0)]
-    
+
+    url_queue: List[Tuple[str, int]] = [(start_url, 0)]
+
     while url_queue:
-        current_depth_urls = [(url, depth_level) for url, depth_level in url_queue if depth_level <= depth]
-        url_queue = [(url, depth_level) for url, depth_level in url_queue if depth_level > depth]
-        
-        if not current_depth_urls:
+        current_level = [(u, d) for u, d in url_queue if d <= depth]
+        url_queue = [(u, d) for u, d in url_queue if d > depth]
+
+        if not current_level:
             break
-            
-        for url, current_depth in current_depth_urls:
-            if url not in visited_urls and current_depth <= depth:
+
+        for url, cur_depth in current_level:
+            if url not in visited_urls and cur_depth <= depth:
                 visited_urls.add(url)
-                
                 try:
-                    response = requests.get(url, timeout=10, allow_redirects=True)
-                    if response.status_code == 200:
-                        all_pages.add(response.url)
-                        
-                        # Parse HTML
-                        links, forms, params = parse_html(response.text, response.url)
-                        
-                        # Add forms and params
+                    resp = requests.get(url, timeout=10, allow_redirects=True)
+                    if resp.status_code and resp.text:
+                        normalized_final = normalize_url(resp.url, resp.url) or resp.url
+                        all_pages.add(normalized_final)
+
+                        links, forms, params = parse_html(resp.text, normalized_final)
                         all_forms.extend(forms)
                         all_params.extend(params)
-                        
-                        # Add new URLs to queue for next depth
-                        if current_depth < depth:
+
+                        if cur_depth < depth:
                             for link in links:
                                 if link not in visited_urls:
-                                    url_queue.append((link, current_depth + 1))
-                    
-                    # Polite delay
+                                    url_queue.append((link, cur_depth + 1))
+
                     time.sleep(delay)
-                    
+
                 except Exception as e:
                     console.print(f"[red]Error processing {url}: {e}[/red]")
-    
-    # Deduplicate results (same as async version)
-    unique_forms = []
+
+    # Deduplicate as above
+    unique_forms: List[Dict] = []
     seen_forms = set()
-    for form in all_forms:
-        form_key = (form['url'], form['action'], form['method'])
-        if form_key not in seen_forms:
-            seen_forms.add(form_key)
-            unique_forms.append(form)
-    
-    unique_params = []
+    for f in all_forms:
+        key = (f.get("url"), f.get("action"), f.get("method"))
+        if key not in seen_forms:
+            seen_forms.add(key)
+            unique_forms.append(f)
+
+    unique_params: List[Dict] = []
     seen_params = set()
-    for param in all_params:
-        param_key = param['url']
-        if param_key not in seen_params:
-            seen_params.add(param_key)
-            unique_params.append(param)
-    
+    for p in all_params:
+        key = p.get("url")
+        if key and key not in seen_params:
+            seen_params.add(key)
+            unique_params.append(p)
+
     elapsed = time.time() - start_time
     console.print(f"[EthioScan] Discovered {len(all_pages)} pages, {len(unique_forms)} forms, {len(unique_params)} paramized URLs")
     console.print(f"[EthioScan] Done crawling (elapsed {elapsed:.1f}s)")
-    
-    return {
-        'pages': sorted(list(all_pages)),
-        'forms': unique_forms,
-        'params': unique_params
-    }
+
+    return {"pages": sorted(list(all_pages)), "forms": unique_forms, "params": unique_params}
