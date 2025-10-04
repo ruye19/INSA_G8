@@ -1,0 +1,29 @@
+# Byte-compiled / cache files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+venv/
+.env/
+.venv/
+
+# OS / IDE files
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+.idea/
+.vscode/
+
+# Reports & database outputs
+examples/*.html
+examples/*.json
+examples/*.txt
+examples/*.sqlite3
+
+# Logs
+*.log
+
+# Test artifacts
+tests/fixtures/__pycache__/
