@@ -32,3 +32,4 @@ tests/fixtures/__pycache__/
 ethioscan.db
 *.sqlite
 *.sqlite3
+.env
