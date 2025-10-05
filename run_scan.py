@@ -23,6 +23,23 @@ from fuzzer import (
 from scanner import Scanner
 from reporter import save_report
 
+# ---------------------------
+# DB: add imports (SQLite now, Postgres-ready later)
+# ---------------------------
+try:
+    from ethioscan_db import (
+        init_db,
+        start_scan,
+        save_findings as db_save_findings,  # avoid name clash with method below
+        finish_scan,
+    )
+except Exception:  # if module missing, keep scanner working
+    init_db = lambda: None
+    start_scan = lambda *a, **k: None
+    db_save_findings = lambda *a, **k: None
+    finish_scan = lambda *a, **k: None
+# ---------------------------
+
 from rich.console import Console
 from rich.progress import (
     Progress,
@@ -43,6 +60,10 @@ class EthioScanOrchestrator:
         self.scanner = Scanner(fast=False)
         self.findings: List[Dict[str, Any]] = []
         self.tests_executed: int = 0
+        # ---------------------------
+        # DB: track current scan id
+        # ---------------------------
+        self.scan_id: Any = None
 
     # ---------------------------
     # Utilities
@@ -249,7 +270,7 @@ class EthioScanOrchestrator:
     # ---------------------------
     # Reporting / Persistence
     # ---------------------------
-    
+
     def save_findings(self, findings: List[Dict[str, Any]]) -> None:
         """Save raw findings JSON to --out when report=json, or sidecar JSON otherwise."""
         # ------------------------------
@@ -369,6 +390,19 @@ class EthioScanOrchestrator:
             if not self.check_allowlist():
                 sys.exit(1)
 
+            # ---------------------------
+            # DB: init and register this scan
+            # ---------------------------
+            init_db()
+            self.scan_id = start_scan({
+                "target_url": self.args.url,
+                "depth": self.args.depth,
+                "concurrency": self.args.concurrency,
+                "max_tests": self.args.max_tests,
+                "lab_mode": self.args.lab,
+            })
+            # ---------------------------
+
             crawl_results = await self.run_crawler()
             test_cases = self.generate_test_cases(crawl_results)
 
@@ -376,6 +410,24 @@ class EthioScanOrchestrator:
                 console.print("[yellow]No test cases generated. Nothing to scan.[/yellow]")
                 self.save_findings([])
                 self.create_summary([])
+                # ---------------------------
+                # DB: finalize even when empty
+                # ---------------------------
+                try:
+                    report_html_path = self.args.out if self.args.report == "html" else None
+                    report_json_path = (
+                        os.path.splitext(self.args.out)[0] + ".json"
+                        if self.args.report == "html"
+                        else self.args.out
+                    )
+                    finish_scan(
+                        self.scan_id,
+                        {"total": 0, "tests_executed": self.tests_executed},
+                        {"html": report_html_path, "json": report_json_path},
+                    )
+                except Exception:
+                    pass
+                # ---------------------------
                 self.print_final_summary([])
                 return
 
@@ -383,6 +435,16 @@ class EthioScanOrchestrator:
 
             # Save raw findings (json or sidecar)
             self.save_findings(findings)
+
+            # ---------------------------
+            # DB: store findings rows
+            # ---------------------------
+            try:
+                db_save_findings(self.scan_id, findings)
+            except Exception:
+                # keep scanning/reporting even if DB write fails
+                pass
+            # ---------------------------
 
             # Create summary
             self.create_summary(findings)
@@ -397,6 +459,22 @@ class EthioScanOrchestrator:
             # Pass tests_run = self.tests_executed for accuracy
             save_report(meta, findings, self.args.report, self.args.out, tests_run=self.tests_executed)
             console.print(f"[green]Detailed report saved to {self.args.out}[/green]")
+
+            # ---------------------------
+            # DB: finalize scan with summary + report paths
+            # ---------------------------
+            try:
+                summary = {"total": len(findings), "tests_executed": self.tests_executed}
+                report_html_path = self.args.out if self.args.report == "html" else None
+                report_json_path = (
+                    os.path.splitext(self.args.out)[0] + ".json"
+                    if self.args.report == "html"
+                    else self.args.out
+                )
+                finish_scan(self.scan_id, summary, {"html": report_html_path, "json": report_json_path})
+            except Exception:
+                pass
+            # ---------------------------
 
             console.print(f"\n[blue]Total scan time: {time.time() - start:.1f} seconds[/blue]")
             self.print_final_summary(findings)
