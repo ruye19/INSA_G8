@@ -1,15 +1,28 @@
 EthioScan Vulnerability Assessment Summary
 ==================================================
-Target URL: https://unauthorized-site.com
-Scan Time: 2025-10-03 02:39:09
-Total Findings: 0
+Target URL: http://localhost:8000/test_page.html
+Scan Time: 2025-10-05 21:09:01
+Tests Executed: 20
+Total Findings: 20
 
 Findings by Severity:
 --------------------
 Critical: 0
-High: 0
-Medium: 0
+High: 16
+Medium: 4
 Low: 0
 
 Findings by Category:
 --------------------
+COMMAND INJECTION: 8
+CROSS-SITE SCRIPTING (XSS): 4
+ERROR RESPONSE: 4
+SQL INJECTION: 4
+
+Top (up to 5) Findings:
+--------------------
+1. Error Response - medium - vuln - http://localhost:8000/submit
+2. SQL Injection - high - vuln - http://localhost:8000/submit
+3. Command Injection - high - username - http://localhost:8000/submit
+4. Cross-Site Scripting (XSS) - high - vuln - http://localhost:8000/submit
+5. Command Injection - high - vuln - http://localhost:8000/submit

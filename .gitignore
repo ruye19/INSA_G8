@@ -27,4 +27,8 @@ examples/*.sqlite3
 
 # Test artifacts
 tests/fixtures/__pycache__/
-.env
+#databases
+
+ethioscan.db
+*.sqlite
+*.sqlite3
