@@ -27,3 +27,4 @@ examples/*.sqlite3
 
 # Test artifacts
 tests/fixtures/__pycache__/
+.env
