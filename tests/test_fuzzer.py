@@ -5,7 +5,7 @@ Tests for EthioScan Fuzzer and Payloads
 import pytest
 import uuid
 from unittest.mock import patch, AsyncMock
-from payloads import (
+from ethioscan.payloads import (
     DEFAULT_PAYLOADS, 
     get_payloads, 
     is_lab_only_payload,

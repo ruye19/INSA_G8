@@ -13,26 +13,23 @@ from typing import Dict, List, Any
 from urllib.parse import urlparse
 
 # EthioScan modules
-from crawler import crawl
-from payloads import get_payloads
-from fuzzer import (
-    generate_tests_from_params,
-    generate_tests_from_forms,
-    submit_test_case,
-)
-from scanner import Scanner
-from reporter import save_report
+from ethioscan.crawler import crawl
+from ethioscan.payloads import get_payloads
+from ethioscan.fuzzer import generate_tests_from_params, generate_tests_from_forms, submit_test_case
+from ethioscan.scanner import Scanner
+from ethioscan.reporter import save_report
 
 # ---------------------------
 # DB: add imports (SQLite now, Postgres-ready later)
 # ---------------------------
 try:
-    from ethioscan_db import (
-        init_db,
-        start_scan,
-        save_findings as db_save_findings,  # avoid name clash with method below
-        finish_scan,
-    )
+   from ethioscan.ethioscan_db import (
+    init_db,
+    start_scan,
+    save_findings as db_save_findings,
+    finish_scan,
+)
+
 except Exception:  # if module missing, keep scanner working
     init_db = lambda: None
     start_scan = lambda *a, **k: None

@@ -9,7 +9,7 @@ from typing import Dict, List, Any, Iterable, Optional
 from urllib.parse import urlparse, parse_qs, urlencode, urlunparse
 import aiohttp
 import requests
-from payloads import get_payloads, is_lab_only_payload
+from ethioscan.payloads import get_payloads, is_lab_only_payload
 
 
 def generate_tests_from_params(params: List[Dict], payloads: Dict, max_per_param: int = 3) -> Iterable[Dict]:

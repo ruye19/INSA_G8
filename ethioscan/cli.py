@@ -165,7 +165,7 @@ Safety Notice:
     console.print(f"  Lab mode: {args.lab}")
 
     try:
-        from run_scan import EthioScanOrchestrator
+        from ethioscan.run_scan import EthioScanOrchestrator
         orchestrator = EthioScanOrchestrator(args)
         asyncio.run(orchestrator.run())
     except ImportError as e:
