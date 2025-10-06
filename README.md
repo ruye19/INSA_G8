@@ -1,6 +1,6 @@
 # EthioScan - Web Vulnerability Scanner
 
-EthioScan is a lightweight Python CLI vulnerability scanner that crawls, fuzzes, scans, and reports findings in HTML/JSON format. It's designed for authorized security testing with built-in safety mechanisms.
+EthioScan is a lightweight Python CLI vulnerability scanner that crawls, fuzzes, scans, and reports findings in HTML/JSON format.It's designed for authorized security testing with built-in safety mechanisms.
 
 ## ⚠️ IMPORTANT SAFETY NOTICE
 
@@ -30,31 +30,50 @@ EthioScan is a lightweight Python CLI vulnerability scanner that crawls, fuzzes,
 1. Clone the repository:
 ```bash
 git clone <repository-url>
-cd ethioscan
+cd INSA_G8
 ```
 
-2. Install dependencies:
+2. Set up a virtual environment
 ```bash
+python -m venv venv
+# Activate it
+# Windows PowerShell
+./venv/Scripts/Activate.ps1
+# Git Bash / Linux / macOS
+source venv/bin/activate
+```
+3. Install dependencies
+```bash
+pip install --upgrade pip
 pip install -r requirements.txt
+
 ```
 
 ## Quick Start
 
-### Basic Usage
+1. Run the Demo Test Server
+EthioScan includes a simple test web app built with Flask for safe testing.
 ```bash
-python cli.py --url https://example.com
+cd tests/fixtures
+python test_server.py
 ```
+2. Run EthioScan
+```bash
+python -m ethioscan.cli --url http://127.0.0.1:8000
+```
+
 
 ### Advanced Usage
 ```bash
 # Scan with custom depth and JSON report
-python cli.py --url https://example.com --depth 3 --report json --out scan_results.json
+python -m ethioscan.cli --url http://127.0.0.1:8000 --depth 3 --report json --out examples/scan_results.json
 
-# Scan with history enabled
-python cli.py --url https://example.com --history
+# Scan with history enabled (stores in ethioscan.db)
+python -m ethioscan.cli --url http://127.0.0.1:8000 --history
 
-# Scan unauthorized domain (requires explicit confirmation)
-python cli.py --url https://unauthorized-site.com --confirm-allow I_HAVE_PERMISSION
+# Scan unauthorized domain (requires confirmation)
+python -m ethioscan.cli --url https://unauthorized.com --confirm-allow I_HAVE_PERMISSION
+
 ```
 
 ## Command Line Options
@@ -68,6 +87,9 @@ python cli.py --url https://unauthorized-site.com --confirm-allow I_HAVE_PERMISS
 | `--concurrency` | Concurrency level | 5 |
 | `--history` | Store results in SQLite | False |
 | `--confirm-allow` | Bypass allowlist confirmation | - |
+| `--lab` | Include lab-only payloads (potentially destructive) | - |
+| `--max-tests` | Maximum number of test cases| - |
+
 
 ## Allowlist Configuration
 
@@ -82,7 +104,7 @@ test.example.com
 
 2. **Use explicit confirmation** (emergency only):
 ```bash
-python cli.py --url https://domain.com --confirm-allow I_HAVE_PERMISSION
+python -m ethioscan.cli --url https://domain.com --confirm-allow I_HAVE_PERMISSION
 ```
 
 ## Crawler Behavior
@@ -113,12 +135,13 @@ The EthioScan crawler discovers web pages, forms, and parameters through intelli
 {
   "pages": ["https://example.com/", "https://example.com/about"],
   "forms": [
-    {"url":"https://example.com/contact","action":"/submit","method":"post","inputs":["name","email"]}
+    {"url": "https://example.com/contact", "action": "/submit", "method": "post", "inputs": ["name","email"]}
   ],
   "params": [
-    {"url":"https://example.com/search?q=test","params":["q"]}
+    {"url": "https://example.com/search?q=test", "params": ["q"]}
   ]
 }
+
 ```
 
 ## Fuzzer & Payloads
@@ -174,23 +197,29 @@ Potentially destructive payloads (like directory traversal) are marked as `lab_o
 ## Project Structure
 
 ```
-ethioscan/
-├── cli.py              # Main CLI interface
-├── crawler.py          # Web crawling functionality
-├── scanner.py          # Vulnerability scanning
-├── fuzzer.py           # Payload fuzzing
-├── reporter.py         # Report generation
-├── database.py         # SQLite database operations
-├── utils.py            # Utility functions and orchestrator
-├── payloads.py         # Security test payloads
-├── allowlist.txt       # Authorized domains list
-├── requirements.txt    # Python dependencies
-├── README.md           # This file
+INSA_G8/
+├── ethioscan/
+│   ├── __init__.py
+│   ├── allowlist.txt
+│   ├── cli.py
+│   ├── crawler.py
+│   ├── database.py
+│   ├── ethioscan_db.py
+│   ├── fuzzer.py
+│   ├── payloads.py
+│   ├── reporter.py
+│   ├── run_scan.py
+│   ├── scanner.py
+│   └── utils.py
+├── examples/
 ├── templates/
-│   └── report_template.html
-└── tests/
-    ├── test_utils.py
-    └── test_scanner.py
+├── tests/
+│   └── fixtures/test_server.py
+├── ethioscan.db
+├── requirements.txt
+├── README.md
+└── .gitignore
+
 ```
 
 ## Legal and Ethical Use
