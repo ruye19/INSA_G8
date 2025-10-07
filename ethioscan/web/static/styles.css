@@ -1,126 +1,174 @@
 body {
-    font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
-    background: #f8f9fb;
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
     margin: 0;
+    background: #f6f8fa;
   }
   
   header {
-    background: #2b4c7e;
+    background: #234a7d;
     color: white;
-    padding: 1em 2em;
+    padding: 20px;
     display: flex;
     justify-content: space-between;
     align-items: center;
   }
   
-  header a { color: white; text-decoration: none; font-size: 1.1em; }
-  
-  main { padding: 2em; }
-  
-  footer {
-    background: #eaeaea;
-    text-align: center;
-    padding: 1em;
-    margin-top: 3em;
-    font-size: 0.9em;
-    color: #555;
+  header h1 {
+    margin: 0;
+    font-size: 28px;
+    font-weight: bold;
   }
   
-  /* Buttons */
-  .btn {
-    border: none;
-    border-radius: 5px;
-    padding: 6px 12px;
+  header nav a {
     color: white;
-    cursor: pointer;
-    font-weight: 500;
+    text-decoration: none;
+    font-size: 18px;
   }
-  .btn-red { background: #e74c3c; }
-  .btn-gray { background: #95a5a6; }
-  .btn-blue { background: #3498db; }
-  .btn:hover { opacity: 0.9; }
   
-  .actions { margin-bottom: 1.2em; }
+  .actions {
+    margin: 20px;
+    display: flex;
+    gap: 10px;
+  }
   
-  /* Table */
+  .input-url {
+    padding: 8px 12px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    width: 250px;
+  }
+  
+  .btn {
+    padding: 8px 16px;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+    font-weight: bold;
+  }
+  
+  .btn-red {
+    background-color: #e74c3c;
+    color: white;
+  }
+  
+  .btn-blue {
+    background-color: #3498db;
+    color: white;
+  }
+  
+  .btn-gray {
+    background-color: #95a5a6;
+    color: white;
+  }
+  
   .scan-table {
-    width: 100%;
+    width: 95%;
+    margin: 20px auto;
     border-collapse: collapse;
     background: white;
     border-radius: 8px;
     overflow: hidden;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.05);
   }
   
   .scan-table th, .scan-table td {
-    padding: 10px 14px;
-    border-bottom: 1px solid #eee;
+    border: 1px solid #ddd;
+    padding: 10px;
+    text-align: center;
   }
   
   .scan-table th {
-    background: #f3f5f7;
-    text-align: left;
-    font-weight: 600;
+    background-color: #f2f4f6;
+    font-weight: bold;
   }
   
   .badge {
-    padding: 4px 8px;
-    border-radius: 6px;
-    color: white;
+    display: inline-block;
+    padding: 6px 10px;
+    border-radius: 8px;
+    color: #fff;
+    font-weight: bold;
+    min-width: 28px;
+    text-align: center;
+  }
+  
+  .badge.high { background-color: #e74c3c; }
+  .badge.medium { background-color: #f39c12; }
+  .badge.low { background-color: #27ae60; }
+  
+  .status.completed {
+    color: #27ae60;
     font-weight: bold;
   }
-  .badge.high { background: #e74c3c; }
-  .badge.medium { background: #f39c12; }
-  .badge.low { background: #27ae60; }
   
-  .status.completed { color: #27ae60; font-weight: bold; }
-  
-  /* Modal */
-  .modal {
-    display: none;
-    position: fixed;
-    top: 0; left: 0;
-    width: 100%; height: 100%;
-    background: rgba(0,0,0,0.5);
-    justify-content: center;
-    align-items: center;
+  .status.progress {
+    color: #f39c12;
+    font-weight: bold;
   }
-  .modal-content {
-    background: white;
+  
+  footer {
+    text-align: center;
     padding: 20px;
-    border-radius: 8px;
-    width: 300px;
-    text-align: center;
+    background: #f2f4f6;
+    margin-top: 40px;
+    font-size: 14px;
+    color: #555;
   }
-  .modal-content input {
-    width: 100%;
-    padding: 8px;
-    margin: 10px 0;
-    border: 1px solid #ccc;
-    border-radius: 5px;
+  /* --- Report Page Enhancements --- */
+.card {
+    border-radius: 12px;
+    border: none;
   }
   
-  /* Report cards */
-  .summary-cards {
-    display: flex;
-    gap: 15px;
-    justify-content: center;
-    flex-wrap: wrap;
-    margin-bottom: 20px;
+  .card-title {
+    font-weight: 600;
+    color: #1e3a8a;
   }
-  .card {
-    width: 130px;
-    text-align: center;
+  
+  .table th, .table td {
+    vertical-align: middle;
+  }
+  
+  .badge {
     border-radius: 8px;
-    padding: 12px;
-    color: white;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
   }
-  .card.high { background: #e74c3c; }
-  .card.medium { background: #f39c12; }
-  .card.low { background: #27ae60; }
-  .card.total { background: #2b4c7e; }
-  .status.inprogress { color: #f39c12; font-weight: bold; }
-.status.completed { color: #27ae60; font-weight: bold; }
-
+  /* --- Report summary cards --- */
+.summary-cards {
+    display: flex;
+    gap: 1rem;
+    margin: 1.5rem 0;
+  }
+  
+  .summary-cards .card {
+    flex: 1;
+    text-align: center;
+    padding: 1rem;
+    border-radius: 12px;
+    color: #fff;
+    font-weight: bold;
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.1);
+  }
+  
+  .summary-cards .card.high { background-color: #dc2626; }
+  .summary-cards .card.medium { background-color: #f59e0b; color: #222; }
+  .summary-cards .card.low { background-color: #16a34a; }
+  .summary-cards .card.total { background-color: #2563eb; }
+  /* --- Findings table color coding --- */
+.findings-table tr.severity-high td {
+    background-color: #fee2e2; /* light red */
+  }
+  .findings-table tr.severity-medium td {
+    background-color: #fef3c7; /* light yellow */
+  }
+  .findings-table tr.severity-low td {
+    background-color: #dcfce7; /* light green */
+  }
+  .findings-table tr.severity-unknown td {
+    background-color: #e5e7eb; /* light gray */
+  }
+  
+  .findings-table tr:hover td {
+    background-color: #e0e7ff !important;
+    transition: background-color 0.3s ease;
+  }
+  
   

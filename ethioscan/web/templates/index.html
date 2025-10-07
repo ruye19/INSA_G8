@@ -2,8 +2,11 @@
 {% block content %}
 
 <div class="actions">
-  <button class="btn btn-red" onclick="openModal()">New Scan</button>
-  <button class="btn btn-gray" onclick="refreshPage()">Generate Report</button>
+  <form action="/scan" method="post" style="display:inline;">
+    <input type="text" name="url" placeholder="Enter target URL..." class="input-url" required>
+    <button type="submit" class="btn btn-red">New Scan</button>
+  </form>
+  <button class="btn btn-gray" onclick="window.location.reload()">Generate Report</button>
 </div>
 
 <table class="scan-table">
@@ -20,70 +23,35 @@
     </tr>
   </thead>
   <tbody>
-    {% for r in reports %}
-    <tr>
-      <td>{{ r.target }}</td>
-      <td>{{ r.total }}</td>
-      <td><span class="badge high">{{ r.high }}</span></td>
-      <td><span class="badge medium">{{ r.medium }}</span></td>
-      <td><span class="badge low">{{ r.low }}</span></td>
-      <td>{{ r.date }}</td>
-      <td>
-        <span class="status {% if r.status == 'In Progress' %}inprogress{% else %}completed{% endif %}">
-          {{ r.status }}
-        </span>
-      </td>
-      
-      <td><a href="/report/{{ r.file }}" class="btn btn-blue">View</a></td>
-    </tr>
-    {% endfor %}
-    {% if reports|length == 0 %}
-    <tr><td colspan="8" style="text-align:center;">No reports found.</td></tr>
+    {% if reports %}
+      {% for r in reports %}
+      <tr>
+        <td>{{ r.target }}</td>
+        <td>{{ r.total }}</td>
+        <td><span class="badge high">{{ r.high }}</span></td>
+        <td><span class="badge medium">{{ r.medium }}</span></td>
+        <td><span class="badge low">{{ r.low }}</span></td>
+        <td>{{ r.date }}</td>
+        <td>
+          {% if r.status == "Completed" %}
+            <span class="status completed">Completed</span>
+          {% else %}
+            <span class="status progress">In Progress</span>
+          {% endif %}
+        </td>
+        <td>
+          {% if r.status == "Completed" %}
+            <a href="/report/{{ r.file }}" class="btn btn-blue">View</a>
+          {% else %}
+            <button class="btn btn-gray" disabled>Pending</button>
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    {% else %}
+      <tr><td colspan="8" style="text-align:center;">No reports available</td></tr>
     {% endif %}
   </tbody>
 </table>
 
-<!-- Modal for new scan -->
-<div id="scanModal" class="modal">
-  <div class="modal-content">
-    <h3>Start New Scan</h3>
-    <form id="scanForm">
-      <label>Target URL:</label>
-      <input type="url" name="url" placeholder="https://example.com" required>
-      <button type="submit" class="btn btn-blue">Start</button>
-      <button type="button" class="btn btn-gray" onclick="closeModal()">Cancel</button>
-    </form>
-  </div>
-</div>
-
-<script>
-    function openModal() { document.getElementById("scanModal").style.display = "flex"; }
-    function closeModal() { document.getElementById("scanModal").style.display = "none"; }
-    
-    document.getElementById("scanForm").addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const formData = new FormData(e.target);
-      const res = await fetch("/scan", { method: "POST", body: formData });
-      const data = await res.json();
-      if (data.status === "started") {
-        alert("Scan started for " + data.url);
-      } else {
-        alert("Error: " + data.error);
-      }
-      closeModal();
-      refreshPage();
-    });
-    
-    function refreshPage() {
-      fetch(window.location.href)
-        .then(res => res.text())
-        .then(html => {
-          document.body.innerHTML = html;
-        });
-    }
-    
-    // Auto-refresh every 10 seconds
-    setInterval(refreshPage, 10000);
-    </script>
-    
 {% endblock %}

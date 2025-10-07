@@ -1,57 +1,103 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="report-header">
-  <h2>Scan Report for <span class="highlight">{{ report.meta.target }}</span></h2>
-  <p>Generated on {{ report.meta.generated_at }}</p>
+<div class="container mt-4">
+  {% if error %}
+    <div class="alert alert-danger text-center">{{ error }}</div>
+  {% else %}
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h2>Vulnerability Report – <span class="text-primary">{{ report.meta.target }}</span></h2>
+      <a href="/" class="btn btn-secondary">← Back to Dashboard</a>
+    </div>
+
+    <!-- Metadata -->
+    <div class="card mb-4 shadow-sm">
+      <div class="card-body">
+        <h5 class="card-title">Scan Information</h5>
+        <table class="table table-bordered mt-3 mb-0">
+          <tbody>
+            <tr><th>Target URL</th><td>{{ report.meta.target }}</td></tr>
+            <tr><th>Generated At</th><td>{{ report.meta.generated_at }}</td></tr>
+            <tr><th>Depth</th><td>{{ report.meta.depth }}</td></tr>
+            <tr><th>Concurrency</th><td>{{ report.meta.concurrency }}</td></tr>
+            <tr><th>Tests Run</th><td>{{ report.meta.tests_run }}</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Summary -->
+    <div class="summary-cards">
+      <div class="card high">
+        <h3>High</h3>
+        <p>{{ report.summary.by_severity.get('High', 0) }}</p>
+      </div>
+      <div class="card medium">
+        <h3>Medium</h3>
+        <p>{{ report.summary.by_severity.get('Medium', 0) }}</p>
+      </div>
+      <div class="card low">
+        <h3>Low</h3>
+        <p>{{ report.summary.by_severity.get('Low', 0) }}</p>
+      </div>
+      <div class="card total">
+        <h3>Total</h3>
+        <p>{{ report.summary.total }}</p>
+      </div>
+    </div>
+
+    <!-- Findings -->
+    <div class="card shadow-sm mb-5">
+      <div class="card-body">
+        <h5 class="card-title mb-3 text-primary">Findings</h5>
+        {% if report.findings %}
+        <div class="table-responsive">
+          <table class="table table-hover align-middle findings-table">
+            <thead class="table-dark">
+              <tr>
+                <th>#</th>
+                <th>Severity</th>
+                <th>Category</th>
+                <th>URL</th>
+                <th>Parameter</th>
+                <th>Payload</th>
+                <th>Evidence</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for f in report.findings %}
+              <tr class="
+                {% if f.severity == 'High' %}severity-high
+                {% elif f.severity == 'Medium' %}severity-medium
+                {% elif f.severity == 'Low' %}severity-low
+                {% else %}severity-unknown{% endif %}
+              ">
+                <td>{{ loop.index }}</td>
+                <td>
+                  {% if f.severity == "High" %}
+                    <span class="badge bg-danger">{{ f.severity }}</span>
+                  {% elif f.severity == "Medium" %}
+                    <span class="badge bg-warning text-dark">{{ f.severity }}</span>
+                  {% elif f.severity == "Low" %}
+                    <span class="badge bg-success">{{ f.severity }}</span>
+                  {% else %}
+                    <span class="badge bg-secondary">{{ f.severity }}</span>
+                  {% endif %}
+                </td>
+                <td>{{ f.category }}</td>
+                <td><small>{{ f.url }}</small></td>
+                <td>{{ f.param }}</td>
+                <td><small><code>{{ f.payload }}</code></small></td>
+                <td><small><pre>{{ f.evidence }}</pre></small></td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% else %}
+        <p class="text-muted">No vulnerabilities found.</p>
+        {% endif %}
+      </div>
+    </div>
+  {% endif %}
 </div>
-
-<div class="summary-cards">
-  <div class="card high">
-    <h3>High</h3>
-    <p>{{ report.summary.by_severity.get('High', 0) }}</p>
-  </div>
-  <div class="card medium">
-    <h3>Medium</h3>
-    <p>{{ report.summary.by_severity.get('Medium', 0) }}</p>
-  </div>
-  <div class="card low">
-    <h3>Low</h3>
-    <p>{{ report.summary.by_severity.get('Low', 0) }}</p>
-  </div>
-  <div class="card total">
-    <h3>Total</h3>
-    <p>{{ report.summary.total }}</p>
-  </div>
-</div>
-
-<h3>Findings</h3>
-<table class="scan-table">
-  <thead>
-    <tr>
-      <th>Category</th>
-      <th>Severity</th>
-      <th>Parameter</th>
-      <th>Payload</th>
-      <th>URL</th>
-      <th>Evidence</th>
-    </tr>
-  </thead>
-  <tbody>
-    {% for f in report.findings %}
-    <tr>
-      <td>{{ f.category }}</td>
-      <td><span class="badge {{ f.severity|lower }}">{{ f.severity }}</span></td>
-      <td>{{ f.param or "-" }}</td>
-      <td><code>{{ f.payload }}</code></td>
-      <td>{{ f.url or f.final_url }}</td>
-      <td><pre>{{ f.evidence }}</pre></td>
-    </tr>
-    {% endfor %}
-    {% if not report.findings %}
-    <tr><td colspan="6">No vulnerabilities found.</td></tr>
-    {% endif %}
-  </tbody>
-</table>
-
-<a href="/" class="btn btn-gray">← Back to Dashboard</a>
 {% endblock %}
