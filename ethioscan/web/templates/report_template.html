@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="report-header">
+  <h2>Scan Report for <span class="highlight">{{ report.meta.target }}</span></h2>
+  <p>Generated on {{ report.meta.generated_at }}</p>
+</div>
+
+<div class="summary-cards">
+  <div class="card high">
+    <h3>High</h3>
+    <p>{{ report.summary.by_severity.get('High', 0) }}</p>
+  </div>
+  <div class="card medium">
+    <h3>Medium</h3>
+    <p>{{ report.summary.by_severity.get('Medium', 0) }}</p>
+  </div>
+  <div class="card low">
+    <h3>Low</h3>
+    <p>{{ report.summary.by_severity.get('Low', 0) }}</p>
+  </div>
+  <div class="card total">
+    <h3>Total</h3>
+    <p>{{ report.summary.total }}</p>
+  </div>
+</div>
+
+<h3>Findings</h3>
+<table class="scan-table">
+  <thead>
+    <tr>
+      <th>Category</th>
+      <th>Severity</th>
+      <th>Parameter</th>
+      <th>Payload</th>
+      <th>URL</th>
+      <th>Evidence</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for f in report.findings %}
+    <tr>
+      <td>{{ f.category }}</td>
+      <td><span class="badge {{ f.severity|lower }}">{{ f.severity }}</span></td>
+      <td>{{ f.param or "-" }}</td>
+      <td><code>{{ f.payload }}</code></td>
+      <td>{{ f.url or f.final_url }}</td>
+      <td><pre>{{ f.evidence }}</pre></td>
+    </tr>
+    {% endfor %}
+    {% if not report.findings %}
+    <tr><td colspan="6">No vulnerabilities found.</td></tr>
+    {% endif %}
+  </tbody>
+</table>
+
+<a href="/" class="btn btn-gray">← Back to Dashboard</a>
+{% endblock %}

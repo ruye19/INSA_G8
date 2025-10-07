@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>{{ title or "EthioScan Dashboard" }}</title>
+  <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+  <header>
+    <h1>EthioScan Dashboard</h1>
+    <nav>
+      <a href="/">🏠 Home</a>
+    </nav>
+  </header>
+
+  <main>
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer>
+    <p>EthioScan © 2025 | Secure. Analyze. Report.</p>
+  </footer>
+</body>
+</html>

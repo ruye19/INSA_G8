@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="actions">
+  <button class="btn btn-red" onclick="openModal()">New Scan</button>
+  <button class="btn btn-gray" onclick="refreshPage()">Generate Report</button>
+</div>
+
+<table class="scan-table">
+  <thead>
+    <tr>
+      <th>Target</th>
+      <th>Total</th>
+      <th>High</th>
+      <th>Medium</th>
+      <th>Low</th>
+      <th>Last Run</th>
+      <th>Status</th>
+      <th>Report</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for r in reports %}
+    <tr>
+      <td>{{ r.target }}</td>
+      <td>{{ r.total }}</td>
+      <td><span class="badge high">{{ r.high }}</span></td>
+      <td><span class="badge medium">{{ r.medium }}</span></td>
+      <td><span class="badge low">{{ r.low }}</span></td>
+      <td>{{ r.date }}</td>
+      <td>
+        <span class="status {% if r.status == 'In Progress' %}inprogress{% else %}completed{% endif %}">
+          {{ r.status }}
+        </span>
+      </td>
+      
+      <td><a href="/report/{{ r.file }}" class="btn btn-blue">View</a></td>
+    </tr>
+    {% endfor %}
+    {% if reports|length == 0 %}
+    <tr><td colspan="8" style="text-align:center;">No reports found.</td></tr>
+    {% endif %}
+  </tbody>
+</table>
+
+<!-- Modal for new scan -->
+<div id="scanModal" class="modal">
+  <div class="modal-content">
+    <h3>Start New Scan</h3>
+    <form id="scanForm">
+      <label>Target URL:</label>
+      <input type="url" name="url" placeholder="https://example.com" required>
+      <button type="submit" class="btn btn-blue">Start</button>
+      <button type="button" class="btn btn-gray" onclick="closeModal()">Cancel</button>
+    </form>
+  </div>
+</div>
+
+<script>
+    function openModal() { document.getElementById("scanModal").style.display = "flex"; }
+    function closeModal() { document.getElementById("scanModal").style.display = "none"; }
+    
+    document.getElementById("scanForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const formData = new FormData(e.target);
+      const res = await fetch("/scan", { method: "POST", body: formData });
+      const data = await res.json();
+      if (data.status === "started") {
+        alert("Scan started for " + data.url);
+      } else {
+        alert("Error: " + data.error);
+      }
+      closeModal();
+      refreshPage();
+    });
+    
+    function refreshPage() {
+      fetch(window.location.href)
+        .then(res => res.text())
+        .then(html => {
+          document.body.innerHTML = html;
+        });
+    }
+    
+    // Auto-refresh every 10 seconds
+    setInterval(refreshPage, 10000);
+    </script>
+    
+{% endblock %}

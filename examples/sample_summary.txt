@@ -1,7 +1,7 @@
 EthioScan Vulnerability Assessment Summary
 ==================================================
 Target URL: http://127.0.0.1:8000
-Scan Time: 2025-10-06 12:24:48
+Scan Time: 2025-10-07 22:44:42
 Tests Executed: 20
 Total Findings: 7
 
@@ -21,7 +21,7 @@ SQL INJECTION: 1
 Top (up to 5) Findings:
 --------------------
 1. Command Injection - high - username - http://127.0.0.1:8000/submit
-2. Cross-Site Scripting (XSS) - high - username - http://127.0.0.1:8000/submit
-3. Command Injection - high - username - http://127.0.0.1:8000/submit
+2. SQL Injection - high - username - http://127.0.0.1:8000/submit
+3. Cross-Site Scripting (XSS) - high - username - http://127.0.0.1:8000/submit
 4. Command Injection - high - username - http://127.0.0.1:8000/submit
-5. SQL Injection - high - username - http://127.0.0.1:8000/submit
+5. Command Injection - high - username - http://127.0.0.1:8000/submit

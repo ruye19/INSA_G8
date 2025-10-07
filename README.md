@@ -40,7 +40,7 @@ python -m venv venv
 # Windows PowerShell
 ./venv/Scripts/Activate.ps1
 # Git Bash / Linux / macOS
-source venv/bin/activate
+source venv/Scripts/activate
 ```
 3. Install dependencies
 ```bash
