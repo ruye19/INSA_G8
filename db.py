@@ -1,8 +1,3 @@
-"""
-EthioScan Database - SQLite database operations for storing scan results
-Note: This module is deprecated. Use db.py instead for database operations.
-"""
-
 import sqlite3
 import os
 from typing import List, Dict
@@ -10,7 +5,6 @@ from typing import List, Dict
 DB_FILE = os.path.join(os.path.dirname(__file__), "ethioscan.db")
 
 def initialize_db():
-    """Initialize the database with required tables."""
     conn = sqlite3.connect(DB_FILE)
     c = conn.cursor()
     c.execute("""
@@ -42,7 +36,6 @@ def initialize_db():
     conn.close()
 
 def save_scan(scan_info: Dict) -> int:
-    """Save scan information and return scan ID."""
     conn = sqlite3.connect(DB_FILE)
     c = conn.cursor()
     c.execute("""
@@ -63,16 +56,9 @@ def save_scan(scan_info: Dict) -> int:
     return scan_id
 
 def save_findings(scan_id: int, findings: List[Dict]):
-    """Save findings for a given scan ID."""
     conn = sqlite3.connect(DB_FILE)
     c = conn.cursor()
     for f in findings:
-        payload_str = ""
-        if isinstance(f.get("payload"), dict):
-            payload_str = f.get("payload", {}).get("payload", "")
-        else:
-            payload_str = str(f.get("payload", ""))
-        
         c.execute("""
             INSERT OR REPLACE INTO findings (id, scan_id, url, param, payload, category, severity, evidence)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?)
@@ -81,7 +67,7 @@ def save_findings(scan_id: int, findings: List[Dict]):
             scan_id,
             f.get("url"),
             f.get("param"),
-            payload_str,
+            f.get("payload", {}).get("payload"),
             f.get("category"),
             f.get("severity"),
             f.get("evidence")
