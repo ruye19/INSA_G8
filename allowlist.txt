@@ -10,3 +10,4 @@ juice-shop.herokuapp.com
 demo.testfire.net
 httpbin.org
 example.com
+testphp.vulnweb.com
